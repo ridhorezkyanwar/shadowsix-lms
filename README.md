@@ -232,7 +232,7 @@ Database `shadowsix` memiliki beberapa tabel penting:
 
 ---
 
-## 🌐 **PROFESSIONAL ENGLISH EXPLANATION**
+## 🌐 **ENGLISH EXPLANATION**
 
 ---
 
