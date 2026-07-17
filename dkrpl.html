@@ -1,0 +1,70 @@
+<?php
+session_start();
+include 'database.php';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DK RPL - ShadowSix</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+      <div class="logo">ShadowSix</div>
+      <nav class="nav">
+        <a href="index.php">Home</a>
+          <a href="tentang.php">Tentang</a>
+          <a href="kontak/kontak.php">Kontak</a>
+      </nav>
+      <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+        <div class="user-info">
+          <span class="username">Halo, <?php echo htmlspecialchars($_SESSION['username']); ?>!</span>
+          <a href="logout.php" class="login-btn logout-btn" style="text-decoration: none">Logout</a>
+        </div>
+      <?php else: ?>
+        <a href="login.php" class="login-btn" style="text-decoration: none">Login</a>
+      <?php endif; ?>
+   </div>
+
+   <div class="hero">
+      <div class="hero-title">DK RPL</div>
+      <div class="hero-desc">Mempelajari dasar-dasar Rekayasa Perangkat Lunak.</div>
+      <?php 
+        $link_mulai_belajar = (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) ? '#subjects' : 'login.php';
+      ?>
+      <a href="<?php echo $link_mulai_belajar; ?>" class="hero-btn" style="text-decoration: none;">Mulai Belajar</a>
+    </div>
+
+   <div class="subjects" id="subjects">
+      <a href="materi-dkrpl/bab1.php" class="subject-card">
+        <div class="subject-icon" style="color: #38bdf8">💻</div>
+        Bab 1 - Pengenalan RPL
+      </a>
+      <a href="materi-dkrpl/bab2.php" class="subject-card">
+        <div class="subject-icon" style="color: #38bdf8">💻</div>
+        Bab 2 - Algoritma dan Logika pemrograman
+      </a>
+      <a href="materi-dkrpl/bab3.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">⚙️</div>
+        Bab 3 - Dasar-Dasar Pemrograman
+      </a>
+      <a href="materi-dkrpl/bab4.php" class="subject-card">
+        <div class="subject-icon" style="color: #22c55e">🗄️</div>
+        Bab 4 - Struktur Data Dasar
+      </a>
+      <a href="materi-dkrpl/bab5.php" class="subject-card">
+        <div class="subject-icon" style="color: #22c55e">🗄️</div>
+        Bab 5 - Pengenalan Basis Data
+      </a>
+      <a href="materi-dkrpl/bab6.php" class="subject-card">
+        <div class="subject-icon" style="color: #6366f1">📱</div>
+        Bab 6 - Pengenalan Pengembangan Aplikasi
+      </a>
+    </div>
+    <footer>
+      <p>&copy; 2026 ShadowSix</p>
+    </footer>
+</body>
+</html>

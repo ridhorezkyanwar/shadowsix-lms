@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShadowSIx</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="features.css" />
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo">ShadowSIx</div>
+      <nav class="nav">
+        <a href="index.php">Home</a>
+        <a href="#subjects">Mata Pelajaran</a>
+        <a href="tentang.php">Tentang</a>
+        <a href="kontak/kontak.php">Kontak</a>
+      </nav>
+
+      <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true):
+      ?>
+      <div class="user-info">
+        <span class="username" style="color: #222"
+          >Halo, <?php echo htmlspecialchars($_SESSION['username']); ?>!</span
+        >
+        <a
+          href="logout.php"
+          class="login-btn logout-btn"
+          style="text-decoration: none"
+          >Logout</a
+        >
+      </div>
+      <?php else: ?>
+      <a href="login.php" class="login-btn" style="text-decoration: none"
+        >Login</a
+      >
+      <?php endif; ?>
+    </div>
+    <div class="hero">
+      <div class="hero-title">ShadowSIx</div>
+      <div class="hero-desc">
+        Semua mata pelajaran dalam satu tempat, mudah diakses kapan saja.
+      </div>
+      <?php $link_mulai_belajar = (isset($_SESSION['loggedin']) &&
+      $_SESSION['loggedin'] === true) ? '#subjects' : 'login.php'; ?>
+      <a
+        href="<?php echo $link_mulai_belajar; ?>"
+        class="hero-btn"
+        style="text-decoration: none"
+        >Mulai Belajar</a
+      >
+    </div>
+    <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true):
+    ?>
+    <div class="subjects" id="subjects">
+      <a href="matematika.php" class="subject-card">
+        <div class="subject-icon" style="color: #38bdf8">&#128425;</div>
+        Matematika
+        <br />
+        Nama Guru Pembimbing : Muzn Mubarak, S.Pd.
+      </a>
+      <a href="bahasa indonesia.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">&#128218;</div>
+        Bahasa Indonesia
+        <br />
+        Nama Guru Pembimbing : Olis Suharlaedani, S.Pd.
+      </a>
+      <a href="bahasa inggris.php" class="subject-card">
+        <div class="subject-icon" style="color: #22c55e">&#127760;</div>
+        Bahasa Inggris
+        <br />
+        Nama Guru Pembimbing : Wasi Ikhsan Dimasqy, S.Pd
+      </a>
+      <a href="dkrpl.php" class="subject-card">
+        <div class="subject-icon" style="color: #6366f1">&#128187;</div>
+        DK RPL
+        <br />
+        Nama Guru Pembimbing : Angrilla Musfaranniss Chanti, S.Pd, Slamet
+        Sutrisno, M.Pd, Apria Sri Rohani, S.Kom.
+      </a>
+      <a href="informatika.php" class="subject-card">
+        <div class="subject-icon" style="color: #0ea5e9">&#128187;</div>
+        Informatika
+        <br />
+        Nama Guru Pembimbing : Purnama Hadi Setiawan, S.Kom
+      </a>
+      <a href="senirupa.php" class="subject-card">
+        <div class="subject-icon" style="color: #fbbf24">&#127912;</div>
+        Seni Rupa
+        <br />
+        Nama Guru Pembimbing : Muhammad Eraz, S.Pd.
+      </a>
+      <a href="materi-pjok/pjok.php" class="subject-card">
+        <div class="subject-icon" style="color: #22c55e">&#127939;</div>
+        PJOK
+        <br />
+        Nama Guru Pembimbing : Bimo Sidiq Purnomo, S.Pd.
+      </a>
+      <a href="materi-sejarah/sejarah.php" class="subject-card">
+        <div class="subject-icon" style="color: #f59e42">🗿</div>
+        Sejarah
+        <br />
+        Nama Guru Pembimbing : Muhammad Eraz, S.Pd.
+      </a>
+      <a href="materi-kodingdanai/kodingdanai.php" class="subject-card">
+        <div class="subject-icon" style="color: #f59e42">🤖</div>
+        Coding & AI
+        <br />
+        Nama Guru Pembimbing : Slamet Sutrisno, M.Pd
+      </a>
+      <a href="materi-ppkn/ppkn.php" class="subject-card">
+        <div class="subject-icon" style="color: #f59e42">🏛️</div>
+        PPKN
+        <br />
+        Nama Guru Pembimbing : Ahmad Baidawi, S.Pd.
+      </a>
+      <a href="materi-bk/bk.php" class="subject-card">
+        <div class="subject-icon" style="color: #f59e42">👥</div>
+        BK
+        <br />
+        Nama Guru Pembimbing : Sri Respati Retnaningtyas, M.M
+      </a>
+      <a href="materi-pai/pai.php" class="subject-card">
+        <div class="subject-icon" style="color: #f59e42">🕋</div>
+        Pendidikan Agama
+        <br />
+        Nama Guru Pembimbing : Hilaliyah, M.Pd & Elprida Simanjuntak, M.Pd.K
+      </a>
+    </div>
+    <?php else: ?>
+    <div class="features">
+      <h2>Kenapa Harus ShadowSIx? Level Up Skill Kamu!</h2>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">📚</div>
+          <h3>Materi Super Lengkap</h3>
+          <p>
+            Semua mata pelajaran esensial tersedia. Materi disusun mendalam dan
+            praktis untuk dikuasai.
+          </p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">💻</div>
+          <h3>Akses Fleksibel & Cepat</h3>
+          <p>
+            Belajar kapan saja, di mana saja. Platform responsif, siap diakses
+            dari desktop atau smartphone Anda.
+          </p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">💸</div>
+          <h3>Gratis Total!</h3>
+          <p>
+            Tingkatkan skillset Anda tanpa hambatan biaya. Seluruh materi 100%
+            gratis tanpa biaya tersembunyi.
+          </p>
+        </div>
+      </div>
+    </div>
+    <?php endif; ?>
+
+    <footer>
+      <p>&copy; 2026 ShadowSIx Belajar RPL SMK</p>
+    </footer>
+  </body>
+</html>

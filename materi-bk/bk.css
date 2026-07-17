@@ -1,0 +1,45 @@
+.content.chapter {
+  background: #fff;
+  color: #222;
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.content.chapter h1 {
+  color: #1d4ed8;
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+}
+
+.content.chapter h2 {
+  color: #1e40af;
+  font-size: 1.8rem;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #dbeafe;
+  padding-bottom: 8px;
+}
+
+.content.chapter p,
+.content.chapter ul {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.content.chapter ul {
+  list-style-type: disc;
+  padding-left: 24px;
+}
+
+.content.chapter a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.content.chapter a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,89 @@
+<?php session_start(); require_once __DIR__ . '/databasecpnel.php'; ?>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bahasa Indonesia - ShadowSix</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo">ShadowSix</div>
+      <nav class="nav">
+        <a href="index.php">Home</a>
+        <a href="tentang.php">Tentang</a>
+        <a href="kontak/kontak.php">Kontak</a>
+      </nav>
+      <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true):
+      ?>
+      <div class="user-info">
+        <span class="username"
+          >Halo, <?php echo htmlspecialchars($_SESSION['username']); ?>!</span
+        >
+        <a
+          href="logout.php"
+          class="login-btn logout-btn"
+          style="text-decoration: none"
+          >Logout</a
+        >
+      </div>
+      <?php else: ?>
+      <a href="login.php" class="login-btn" style="text-decoration: none"
+        >Login</a
+      >
+      <?php endif; ?>
+    </div>
+
+    <div class="hero">
+      <div class="hero-title">bahasa Indonesia</div>
+      <div class="hero-desc">Bahasa Yang Kita Pakai Sehari Hari</div>
+      <?php $link_mulai_belajar = (isset($_SESSION['loggedin']) &&
+      $_SESSION['loggedin'] === true) ? '#subjects' : 'login.php'; ?>
+      <a
+        href="<?php echo $link_mulai_belajar; ?>"
+        class="hero-btn"
+        style="text-decoration: none"
+        >Mulai Belajar</a
+      >
+    </div>
+
+    <div class="subjects" id="subjects">
+      <a href="materi-bahasa-indonesia/bab1.php" class="subject-card">
+        <div class="subject-icon" style="color: #38bdf8">🔭</div>
+        Bab 1 - Membaca Kritis & Literasi
+      </a>
+      <a href="materi-bahasa-indonesia/bab2.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">🫅</div>
+        Bab 2 - Menulis Teks Deskripsi & Prosedur
+      </a>
+      <a href="materi-bahasa-indonesia/bab3.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">🗣️</div>
+        Bab 3 - Menulis Eksposisi & Esei Singkat
+      </a>
+      <a href="materi-bahasa-indonesia/bab4.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">😏</div>
+        Bab 4 - Sastra: Puisi & Cerita Pendek
+      </a>
+      <a href="materi-bahasa-indonesia/bab5.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">🌟</div>
+        Bab 5 - Drama, Dialog, & Pidato
+      </a>
+      <a href="materi-bahasa-indonesia/bab6.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">🌟</div>
+        Bab 6 - Kebahasaan: EYD, Tanda Baca & Struktur Kalimat
+      </a>
+      <a href="materi-bahasa-indonesia/bab7.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">🌟</div>
+        Bab 7 - Berbicara: Presentasi, Diskusi, Wawancara
+      </a>
+      <a href="materi-bahasa-indonesia/bab8.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">🌟</div>
+        Bab 8 - Literasi Media & Teks Digital
+      </a>
+    </div>
+    <footer>
+      <p>&copy; 2026 ShadowSix</p>
+    </footer>
+  </body>
+</html>

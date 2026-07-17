@@ -1,0 +1,78 @@
+<?php
+session_start();
+include 'database.php';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatika - ShadowSix</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+      <div class="logo">ShadowSix</div>
+      <nav class="nav">
+        <a href="index.php">Home</a>
+        <a href="tentang.php">Tentang</a>
+        <a href="kontak/kontak.php">Kontak</a>
+      </nav>
+      <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+        <div class="user-info">
+          <span class="username">Halo, <?php echo htmlspecialchars($_SESSION['username']); ?>!</span>
+          <a href="logout.php" class="login-btn logout-btn" style="text-decoration: none">Logout</a>
+        </div>
+      <?php else: ?>
+        <a href="login.php" class="login-btn" style="text-decoration: none">Login</a>
+      <?php endif; ?>
+   </div>
+
+   <div class="hero">
+      <div class="hero-title">Informatika</div>
+      <div class="hero-desc">Mempelajari dunia komputasi dan teknologi informasi.</div>
+      <?php 
+        $link_mulai_belajar = (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) ? '#subjects' : 'login.php';
+      ?>
+      <a href="<?php echo $link_mulai_belajar; ?>" class="hero-btn" style="text-decoration: none;">Mulai Belajar</a>
+    </div>
+
+   <div class="subjects" id="subjects">
+      <a href="materi-informatika/bab1.php" class="subject-card">
+        <div class="subject-icon" style="color: #38bdf8">🖥️</div>
+        Bab 1 - Pengenalan Informatika & Sistem Komputer
+      </a>
+      <a href="materi-informatika/bab2.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">🌐</div>
+        Bab 2 - Jaringan Komputer & Internet
+      </a>
+      <a href="materi-informatika/bab3.php" class="subject-card">
+        <div class="subject-icon" style="color: #22c55e">⚙️</div>
+        Bab 3 - Algoritma & Flowchart
+      </a>
+      <a href="materi-informatika/bab4.php" class="subject-card">
+        <div class="subject-icon" style="color: #6366f1">👨‍💻</div>
+        Bab 4 - Dasar Pemrograman
+      </a>
+      <a href="materi-informatika/bab5.php" class="subject-card">
+        <div class="subject-icon" style="color: #0ea5e9">🗃️</div>
+        Bab 5 - Basis Data & Pengelolaan Data
+      </a>
+      <a href="materi-informatika/bab6.php" class="subject-card">
+        <div class="subject-icon" style="color: #fbbf24">🎨</div>
+        Bab 6 - Desain Grafis & Media Digital
+      </a>
+      <a href="materi-informatika/bab7.php" class="subject-card">
+        <div class="subject-icon" style="color: #f472b6">💼</div>
+        Bab 7 - TI dalam Dunia Kerja
+      </a>
+      <a href="materi-informatika/bab8.php" class="subject-card">
+        <div class="subject-icon" style="color: #a78bfa">🛡️</div>
+        Bab 8 - Keamanan Digital & Etika Teknologi
+      </a>
+    </div>
+    <footer>
+      <p>&copy; 2026 ShadowSix</p>
+    </footer>
+</body>
+</html>

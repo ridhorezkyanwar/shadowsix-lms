@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - NaKo Belajar RPL SMK</title>
+    <link rel="stylesheet" href="login.css" />
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-title">
+        <span>Login</span>
+        <div class="logo">NaKo</div>
+      </div>
+
+      <form action="login.php" method="POST">
+        <label class="login-label" for="username">Username</label>
+        <input
+          class="login-input"
+          type="text"
+          id="username"
+          name="username"
+          placeholder="Enter your username"
+          required
+        />
+        <label class="login-label" for="email">Email</label>
+        <input
+          class="login-input"
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Enter your email"
+          required
+        />
+        <label class="login-label" for="password">Password</label>
+        <div class="password-wrapper">
+          <input
+            class="login-input"
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            required
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            onclick="togglePassword()"
+            tabindex="-1"
+            aria-label="Show password"
+          >
+            &#128065;
+          </button>
+        </div>
+        <button class="login-btn-main" type="submit">Login</button>
+        <br />
+      </form>
+      <a href="index.php"
+        ><button class="login-btn-kembali">Kembali Ke Home</button></a
+      >
+      <p>
+        Belum Punya Akun ?
+        <a class="register" href="register.php">Register disini</a>
+      </p>
+    </div>
+    <script>
+      function togglePassword() {
+        const pwd = document.getElementById("password");
+        if (pwd.type === "password") {
+          pwd.type = "text";
+        } else {
+          pwd.type = "password";
+        }
+      }
+    </script>
+  </body>
+</html>

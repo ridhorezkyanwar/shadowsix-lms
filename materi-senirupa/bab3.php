@@ -1,0 +1,126 @@
+<?php
+session_start();
+?>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Desain Tiga Dimensional - ShadowSix</title>
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="seni.css" />
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo">ShadowSix</div>
+      <nav class="nav">
+        <a href="../index.php">Home</a>
+        <a href="../senirupa.php">kembali ke materi seni rupa</a>
+        <a href="#">Tentang</a>
+      </nav>
+      <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+      <div class="user-info">
+        <span class="username"
+          >Selamat Datang,
+          <?php echo htmlspecialchars($_SESSION['username']); ?>!</span
+        >
+        <a
+          href="../logout.php"
+          class="login-btn logout-btn"
+          style="text-decoration: none"
+          >Logout</a
+        >
+      </div>
+      <?php else: ?>
+      <a href="../login.php" class="login-btn" style="text-decoration: none"
+        >Login</a
+      >
+      <?php endif; ?>
+    </div>
+
+    <div class="hero">
+      <div class="hero-title">Desain Dasar Tiga Dimensional</div>
+      <div class="hero-desc">
+        Memahami unsur, prinsip, dan metode dalam menciptakan karya tiga dimensi.
+      </div>
+    </div>
+
+    <div class="content">
+      <h1>BAB 3</h1>
+<h1>DESAIN DASAR TIGA DIMENSIONAL</h1>
+
+<h2>Pengertian Desain 3 Dimensi</h2>
+<p>
+    Desain tiga dimensi adalah proses merancang objek atau karya seni yang memiliki panjang, lebar, dan tinggi. 
+    Karya 3D bisa berupa patung, maket, kerajinan, produk, atau bentuk lainnya yang dapat dilihat dari berbagai arah.
+</p>
+
+<h2>Unsur-Unsur Bentuk 3 Dimensi</h2>
+<p>Unsur dasar dalam desain 3D meliputi:</p>
+<ul>
+    <li>Garis</li>
+    <li>Bidang</li>
+    <li>Bentuk/Volume</li>
+    <li>Tekstur</li>
+    <li>Warna</li>
+    <li>Ruang</li>
+</ul>
+
+<h2>Prinsip Desain 3 Dimensi</h2>
+<p>Prinsip dasar untuk menghasilkan karya 3D yang harmonis:</p>
+<ul>
+    <li><strong>Keseimbangan</strong>: penyebaran visual agar tidak berat sebelah.</li>
+    <li><strong>Kesatuan</strong>: setiap elemen saling mendukung.</li>
+    <li><strong>Irama</strong>: pengulangan bentuk yang teratur.</li>
+    <li><strong>Proporsi</strong>: perbandingan ukuran antarbagian.</li>
+    <li><strong>Penekanan</strong>: bagian yang dibuat paling menonjol.</li>
+</ul>
+
+<h2>Bahan dan Media dalam Desain 3D</h2>
+<h3>Bahan Lunak</h3>
+<ul>
+    <li>Tanah liat</li>
+    <li>Plastisin</li>
+    <li>Paper clay</li>
+    <li>Plastik lunak</li>
+    <li>Styrofoam</li>
+</ul>
+
+<h3>Bahan Keras</h3>
+<ul>
+    <li>Kayu</li>
+    <li>Bambu</li>
+    <li>Kawat</li>
+    <li>Karton tebal</li>
+    <li>Batang korek api</li>
+</ul>
+
+<h2>Metode Pembentukan 3 Dimensi</h2>
+
+<h3>1. Konfigurasi Linier</h3>
+<p>
+    Membuat kerangka atau struktur bentuk dengan bahan yang bersifat panjang seperti kawat, lidi, atau bambu. 
+    Hasilnya berupa model rangka yang menunjukkan garis besar objek.
+</p>
+
+<h3>2. Transformasi Volumetrik</h3>
+<p>
+    Proses membentuk volume dengan mengurangi atau menambah bahan, seperti memahat, mengukir, atau membentuk cekungan dan tonjolan.
+</p>
+
+<h3>3. Konfigurasi Ruang</h3>
+<p>
+    Membuat bentuk berdasarkan pemanfaatan ruang, rongga, dan hubungan antar bidang sehingga menghasilkan desain yang memiliki kedalaman.
+</p>
+
+<h2>Fungsi Desain 3 Dimensi</h2>
+<p>
+    Desain 3D digunakan dalam berbagai bidang, seperti arsitektur, kerajinan, desain produk, patung, dan interior. 
+    Fungsinya meliputi estetika, komunikasi visual, perancangan, dan pembuatan model awal (prototype).
+</p>
+    </div>
+    <footer>
+      <p>&copy; 2025 ShadowSix Project UKK No Absen 30</p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,85 @@
+<?php
+session_start();
+require_once __DIR__ . '/databasecpnel.php';
+?>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matematika - ShadowSix</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo">ShadowSix</div>
+      <nav class="nav">
+        <a href="index.php">Home</a>
+        <a href="tentang.php">Tentang</a>
+        <a href="kontak/kontak.php">Kontak</a>
+      </nav>
+      <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true):
+      ?>
+      <div class="user-info">
+        <span class="username"
+          >Halo, <?php echo htmlspecialchars($_SESSION['username']); ?>!</span
+        >
+        <a
+          href="logout.php"
+          class="login-btn logout-btn"
+          style="text-decoration: none"
+          >Logout</a
+        >
+      </div>
+      <?php else: ?>
+      <!-- Jika user belum login, tampilkan tombol login -->
+      <a href="login.php" class="login-btn" style="text-decoration: none"
+        >Login</a
+      >
+      <?php endif; ?>
+    </div>
+
+    <div class="hero">
+      <div class="hero-title">MATEMATIKA</div>
+      <div class="hero-desc">ILMU YANG MENYENANGKAN</div>
+      <?php $link_mulai_belajar = (isset($_SESSION['loggedin']) &&
+      $_SESSION['loggedin'] === true) ? '#subjects' : 'login.php'; ?>
+      <a
+        href="<?php echo $link_mulai_belajar; ?>"
+        class="hero-btn"
+        style="text-decoration: none"
+        >Mulai Belajar</a
+      >
+    </div>
+
+    <div class="subjects" id="subjects">
+      <a href="materi-matematika/bab1.php" class="subject-card">
+        <div class="subject-icon" style="color: #38bdf8">1</div>
+        Bab 1 - Bilangan dan Aljabar
+      </a>
+      <a href="materi-matematika/bab2.php" class="subject-card">
+        <div class="subject-icon" style="color: #f87171">2</div>
+        Bab 2 - Persamaan dan Pertidaksamaan
+      </a>
+      <a href="materi-matematika/bab3.php" class="subject-card">
+        <div class="subject-icon" style="color: #22c55e">3</div>
+        Bab 3 - Relasi dan Fungsi
+      </a>
+      <a href="materi-matematika/bab4.php" class="subject-card">
+        <div class="subject-icon" style="color: #6366f1">4</div>
+        Bab 4 - Sistem Persamaan Linear Dua Variabel
+      </a>
+      <a href="materi-matematika/bab5.php" class="subject-card">
+        <div class="subject-icon" style="color: #0ea5e9">5</div>
+        Bab 5 - Geometri Dasar
+      </a>
+      <a href="materi-matematika/bab6.php" class="subject-card">
+        <div class="subject-icon" style="color: #fbbf24">6</div>
+        Bab 6 - Trigonometri Dasar
+      </a>
+    </div>
+    <footer>
+      <p>&copy; 2026 ShadowSix Project UKK No Absen 30</p>
+    </footer>
+  </body>
+</html>
