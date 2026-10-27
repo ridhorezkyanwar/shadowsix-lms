@@ -1,41 +1,58 @@
 <?php
 session_start();
-include 'databasecpnel.php'; 
+require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/databasecpnel.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+$error_message = '';
+$csrfToken = shadowsix_csrf_token();
 
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-
-    $stmt = $conn->prepare("SELECT id, fullname, password, role FROM login WHERE email = ?");
-    if ($stmt) {
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows == 1) {
-            $user = $result->fetch_assoc();
-
-            if (password_verify($password, $user['password'])) {
-                $_SESSION['loggedin'] = true;
-                $_SESSION['id'] = $user['id'];
-                $_SESSION['username'] = $user['fullname'];
-                $_SESSION['role'] = $user['role'];
-
-                header("Location: index.php");
-                exit();
-            } else {
-                $error_message = "Email atau Password salah.";
-            }
-        } else {
-            $error_message = "Email atau Password salah.";
-        }
-        $stmt->close();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!shadowsix_verify_csrf_token($_POST['csrf_token'] ?? null)) {
+        $error_message = 'Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.';
     } else {
-        $error_message = "Kesalahan Sistem: Gagal memproses data.";
-    }
+        $emailValue = $_POST['email'] ?? '';
+        $passwordValue = $_POST['password'] ?? '';
 
-    $conn->close();
+        if (
+            !is_string($emailValue) || !is_string($passwordValue) ||
+            strlen($emailValue) > 191 || !filter_var(trim($emailValue), FILTER_VALIDATE_EMAIL) ||
+            $passwordValue === '' || strlen($passwordValue) > 4096
+        ) {
+            $error_message = 'Email atau Password salah.';
+        } else {
+            $email = strtolower(trim($emailValue));
+            $stmt = null;
+
+            try {
+                $stmt = $conn->prepare('SELECT id, fullname, password, role FROM login WHERE email = ? LIMIT 1');
+                $stmt->bind_param('s', $email);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $user = $result->fetch_assoc();
+
+                if ($user && password_verify($passwordValue, $user['password'])) {
+                    session_regenerate_id(true);
+                    $_SESSION['loggedin'] = true;
+                    $_SESSION['id'] = (int) $user['id'];
+                    $_SESSION['username'] = $user['fullname'];
+                    $_SESSION['role'] = $user['role'];
+                    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+                    header('Location: index.php');
+                    exit();
+                }
+
+                $error_message = 'Email atau Password salah.';
+            } catch (Throwable $e) {
+                error_log('ShadowSix: login attempt could not be processed: ' . $e->getMessage());
+                $error_message = 'Login tidak dapat diproses saat ini. Silakan coba lagi nanti.';
+            } finally {
+                if ($stmt instanceof mysqli_stmt) {
+                    $stmt->close();
+                }
+            }
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -56,6 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <form action="login.php" method="POST">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
           <label class="login-label" for="email">Email</label>
           <input
             class="login-input"
