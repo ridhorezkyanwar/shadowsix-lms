@@ -1,11 +1,10 @@
 <?php
 session_start();
-include 'databasecpnel.php'; 
+require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/databasecpnel.php';
 
-if (!isset($_SESSION['loggedin']) || $_SESSION['role'] !== 'admin') {
-    header("Location: login.php");
-    exit();
-}
+shadowsix_require_admin();
+$csrfToken = shadowsix_csrf_token();
 
 $query = "SELECT id, nama_pelajaran, judul_materi, nama_guru, created_at FROM materi ORDER BY id DESC";
 $result = $conn->query($query);
@@ -73,7 +72,11 @@ if (isset($_GET['pesan'])) {
                   <td><?php echo date('d/m/Y', strtotime($row['created_at'])); ?></td>
                   <td>
                     <a href="edit_materi.php?id=<?php echo $row['id']; ?>" class="btn-action btn-edit">Edit</a>
-                    <a href="hapus_materi.php?id=<?php echo $row['id']; ?>" class="btn-action btn-delete" onclick="return confirm('Apakah Anda yakin ingin menghapus materi ini?')">Hapus</a>
+                    <form action="hapus_materi.php" method="POST" style="display: inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus materi ini?')">
+                      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
+                      <input type="hidden" name="id" value="<?php echo (int) $row['id']; ?>">
+                      <button type="submit" class="btn-action btn-delete" style="font: inherit; border: 0; cursor: pointer;">Hapus</button>
+                    </form>
                   </td>
                 </tr>
               <?php endwhile; ?>
