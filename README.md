@@ -54,7 +54,9 @@ ShadowSix is a PHP and MySQL/MariaDB learning-management project built for a sch
 
 For local XAMPP only, `.htaccess.example` shows one way to set these variables through Apache. Copy it to `.htaccess` and edit the values for your local database. The real `.htaccess` is ignored by Git and must not be committed. On hosting, set the variables through the hosting control panel or server configuration instead. Confirm the host supports the chosen environment-variable mechanism before deploying.
 
-Open `http://localhost/shadowsix-lms/index.php`. Register a new account to test the student flow. Do not promote an account to administrator by editing a public seed file; assign administrator privileges only through a controlled database operation on your own instance.
+Optional contact-email settings are `CONTACT_EMAIL` (destination address) and `MAIL_FROM` (a sender address authorized by your host). Without both values, the form stores the message in the database but does not send an email. A successful `mail()` return means the mail server accepted the message for handling; it does not guarantee delivery.
+
+Open `http://localhost/shadowsix-lms/index.php`. Register a new account to test the student flow. The schema does not create a default administrator. To grant admin access on your own development database after registering, run a deliberate database operation such as `UPDATE login SET role = 'admin' WHERE email = 'your-own-address@example.test';` with your own registered email. Never put real account credentials or data in the repository.
 
 ## Database configuration and secrets
 
@@ -65,11 +67,9 @@ The application reads `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` from th
 ## Security and limitations
 
 - SQL operations in the authentication/material flows use prepared statements in several places, but this does not mean the whole application is secure.
-- Before a production deployment, add CSRF protection to state-changing forms, harden file uploads, review session settings and rate limiting, and sanitize stored rich-text material before rendering it.
+- Admin create/edit/delete forms and logout use CSRF tokens; login rotates the session ID; uploaded raster images are checked by MIME type and image headers; and rich-text material is sanitized before rendering.
+- Before a production deployment, review rate limiting, secure cookie flags, admin provisioning, file-upload hosting rules, backups, and the application's remaining legacy PHP flows.
 - Do not place production data, account exports, contact messages, password hashes, credentials, or uploaded files in Git.
 - Use only test data in development.
 - The schema file is structure only; an administrator account is not pre-created.
 
-## License
-
-See [LICENSE](LICENSE).
