@@ -1,109 +1,97 @@
 <?php
 session_start();
-include 'databasecpnel.php';
+require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/databasecpnel.php';
 
-// Proteksi halaman
-if (!isset($_SESSION['loggedin']) || $_SESSION['role'] !== 'admin') {
-    header("Location: login.php");
+shadowsix_require_admin();
+
+$idValue = $_GET['id'] ?? '';
+$id = is_scalar($idValue) && ctype_digit((string) $idValue) ? (int) $idValue : 0;
+if ($id <= 0) {
+    header('Location: dashboard_admin.php');
     exit();
 }
 
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$stmtFetch = $conn->prepare('SELECT id, nama_pelajaran, judul_materi, isi_materi, gambar_materi, gambar_mapel, nama_guru FROM materi WHERE id = ?');
+$stmtFetch->bind_param('i', $id);
+$stmtFetch->execute();
+$result = $stmtFetch->get_result();
+$data = $result->fetch_assoc();
+$stmtFetch->close();
 
-
-if ($id <= 0) {
-    header("Location: dashboard_admin.php");
-    exit();
+if (!$data) {
+    http_response_code(404);
+    exit('Materi tidak ditemukan.');
 }
 
 $message_status = '';
+$csrfToken = shadowsix_csrf_token();
 
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nama_pelajaran = htmlspecialchars(strip_tags(trim($_POST["nama_pelajaran"])));
-    $judul_materi = htmlspecialchars(strip_tags(trim($_POST["judul_materi"])));
-    $isi_materi = trim($_POST["isi_materi"]);
-    $current_gambar = $_POST['current_gambar'] ?? null; // Ambil nama gambar yang sudah ada
-    $current_mapel = $_POST['current_mapel'] ?? null;
-    $nama_guru = htmlspecialchars(strip_tags(trim($_POST["nama_guru"])));
-    $gambar_materi = $current_gambar; // Defaultnya tetap gambar yang sudah ada
-    $gambar_mapel = $current_mapel;
-
-    if (!empty($nama_pelajaran) && !empty($judul_materi) && !empty($isi_materi)) {
-        // Handle image upload if a new file is selected
-        if (isset($_FILES['gambar_materi']) && $_FILES['gambar_materi']['error'] == UPLOAD_ERR_OK) {
-            $target_dir = "uploads/materi/";
-            if (!is_dir($target_dir)) {
-                mkdir($target_dir, 0777, true);
-            }
-
-            $file_extension = pathinfo($_FILES['gambar_materi']['name'], PATHINFO_EXTENSION);
-            $new_file_name = uniqid('materi_') . '.' . $file_extension;
-            $target_file = $target_dir . $new_file_name;
-            $imageFileType = strtolower($file_extension);
-
-            $allowed_types = ['jpg', 'jpeg', 'png', 'gif'];
-            if (!in_array($imageFileType, $allowed_types)) {
-                $message_status = '<div class="status-msg error">Maaf, hanya file JPG, JPEG, PNG & GIF yang diizinkan.</div>';
-            } elseif ($_FILES['gambar_materi']['size'] > 5000000) { // 5MB
-                $message_status = '<div class="status-msg error">Maaf, ukuran file terlalu besar (maks 5MB).</div>';
-            } elseif (move_uploaded_file($_FILES['gambar_materi']['tmp_name'], $target_file)) {
-                // Hapus gambar lama jika ada dan berhasil upload gambar baru
-                if ($current_gambar && file_exists($current_gambar)) {
-                    unlink($current_gambar);
-                }
-                $gambar_materi = $target_file;
-            } else {
-                $message_status = '<div class="status-msg error">Maaf, terjadi kesalahan saat mengunggah gambar baru.</div>';
-            }
-        }
-
-        // Handle mapel image update
-        if (isset($_FILES['gambar_mapel']) && $_FILES['gambar_mapel']['error'] == UPLOAD_ERR_OK) {
-            $target_dir_mapel = "uploads/mapel/";
-            if (!is_dir($target_dir_mapel)) mkdir($target_dir_mapel, 0777, true);
-            
-            $ext = pathinfo($_FILES['gambar_mapel']['name'], PATHINFO_EXTENSION);
-            $new_name = uniqid('mapel_') . '.' . $ext;
-            $target_f = $target_dir_mapel . $new_name;
-
-            if (move_uploaded_file($_FILES['gambar_mapel']['tmp_name'], $target_f)) {
-                if ($current_mapel && file_exists($current_mapel)) unlink($current_mapel);
-                $gambar_mapel = $target_f;
-            }
-        }
-
-        // Hanya lanjutkan jika tidak ada error upload atau jika tidak ada gambar yang diupload
-        if (empty($message_status)) {
-            // Menggunakan Prepared Statement untuk keamanan
-            $stmt_update = $conn->prepare("UPDATE materi SET nama_pelajaran = ?, judul_materi = ?, isi_materi = ?, gambar_materi = ?, gambar_mapel = ?, nama_guru = ? WHERE id = ?");
-            if ($stmt_update) {
-                $stmt_update->bind_param("ssssssi", $nama_pelajaran, $judul_materi, $isi_materi, $gambar_materi, $gambar_mapel, $nama_guru, $id);
-                
-                if ($stmt_update->execute()) {
-                    $message_status = '<div class="status-msg success">Materi Berhasil Diperbarui!</div>';
-                } else {
-                    $message_status = '<div class="status-msg error">Gagal memperbarui data.</div>';
-                }
-                $stmt_update->close();
-            }
-        }
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!shadowsix_verify_csrf_token($_POST['csrf_token'] ?? null)) {
+        $message_status = '<div class="status-msg error">Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.</div>';
     } else {
-        $message_status = '<div style="color: #e74c3c; font-weight: bold; margin-bottom: 15px;">Harap isi semua kolom form.</div>';
+        $nama_pelajaran = trim((string) ($_POST['nama_pelajaran'] ?? ''));
+        $judul_materi = trim((string) ($_POST['judul_materi'] ?? ''));
+        $isi_materi = trim((string) ($_POST['isi_materi'] ?? ''));
+        $nama_guru = trim((string) ($_POST['nama_guru'] ?? ''));
+
+        if (
+            $nama_pelajaran === '' || strlen($nama_pelajaran) > 100 ||
+            $judul_materi === '' || strlen($judul_materi) > 191 ||
+            $isi_materi === '' || strlen($isi_materi) > 60000 ||
+            strlen($nama_guru) > 100
+        ) {
+            $message_status = '<div class="status-msg error">Periksa kembali isian. Nama pelajaran maksimal 100 karakter, judul 191 karakter, nama guru 100 karakter, dan isi materi maksimal 60.000 byte.</div>';
+        } else {
+            $materiUpload = shadowsix_store_uploaded_image($_FILES['gambar_materi'] ?? null, 'materi');
+            $mapelUpload = shadowsix_store_uploaded_image($_FILES['gambar_mapel'] ?? null, 'mapel');
+
+            if ($materiUpload['error'] !== null || $mapelUpload['error'] !== null) {
+                shadowsix_delete_uploaded_image($materiUpload['path'], 'materi');
+                shadowsix_delete_uploaded_image($mapelUpload['path'], 'mapel');
+                $uploadError = $materiUpload['error'] ?? $mapelUpload['error'];
+                $message_status = '<div class="status-msg error">' . htmlspecialchars((string) $uploadError, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>';
+            } else {
+                // Keep the existing database paths; never trust hidden form values for filesystem operations.
+                $gambar_materi = $materiUpload['path'] !== null ? $materiUpload['path'] : $data['gambar_materi'];
+                $gambar_mapel = $mapelUpload['path'] !== null ? $mapelUpload['path'] : $data['gambar_mapel'];
+                $stmtUpdate = null;
+
+                try {
+                    $stmtUpdate = $conn->prepare(
+                        'UPDATE materi SET nama_pelajaran = ?, judul_materi = ?, isi_materi = ?, gambar_materi = ?, gambar_mapel = ?, nama_guru = ? WHERE id = ?'
+                    );
+                    $stmtUpdate->bind_param('ssssssi', $nama_pelajaran, $judul_materi, $isi_materi, $gambar_materi, $gambar_mapel, $nama_guru, $id);
+                    $stmtUpdate->execute();
+
+                    if ($materiUpload['path'] !== null && $data['gambar_materi'] !== $gambar_materi) {
+                        shadowsix_delete_uploaded_image($data['gambar_materi'], 'materi');
+                    }
+                    if ($mapelUpload['path'] !== null && $data['gambar_mapel'] !== $gambar_mapel) {
+                        shadowsix_delete_uploaded_image($data['gambar_mapel'], 'mapel');
+                    }
+
+                    $data['nama_pelajaran'] = $nama_pelajaran;
+                    $data['judul_materi'] = $judul_materi;
+                    $data['isi_materi'] = $isi_materi;
+                    $data['gambar_materi'] = $gambar_materi;
+                    $data['gambar_mapel'] = $gambar_mapel;
+                    $data['nama_guru'] = $nama_guru;
+                    $message_status = '<div class="status-msg success">Materi berhasil diperbarui.</div>';
+                } catch (Throwable $e) {
+                    error_log('ShadowSix: failed to update material: ' . $e->getMessage());
+                    shadowsix_delete_uploaded_image($materiUpload['path'], 'materi');
+                    shadowsix_delete_uploaded_image($mapelUpload['path'], 'mapel');
+                    $message_status = '<div class="status-msg error">Materi tidak dapat diperbarui. Periksa konfigurasi dan coba lagi.</div>';
+                } finally {
+                    if ($stmtUpdate instanceof mysqli_stmt) {
+                        $stmtUpdate->close();
+                    }
+                }
+            }
+        }
     }
-}
-
-
-$stmt_fetch = $conn->prepare("SELECT * FROM materi WHERE id = ?");
-$stmt_fetch->bind_param("i", $id); // Re-fetch data after potential update
-$stmt_fetch->execute();
-$result = $stmt_fetch->get_result();
-$data = $result->fetch_assoc();
-$stmt_fetch->close();
-
-
-if (!$data) {
-    die("Data materi tidak ditemukan.");
 }
 ?>
 <!DOCTYPE html>
@@ -135,6 +123,7 @@ if (!$data) {
       <?php echo $message_status; ?>
 
       <form action="edit_materi.php?id=<?php echo $id; ?>" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
         <div class="form-group">
           <label for="nama_pelajaran">Nama Pelajaran</label>
           <input type="text" id="nama_pelajaran" name="nama_pelajaran" value="<?php echo htmlspecialchars($data['nama_pelajaran']); ?>" required />
@@ -154,7 +143,7 @@ if (!$data) {
           <label for="gambar_mapel">Gambar Mata Pelajaran (Beranda)</label>
           <?php if (!empty($data['gambar_mapel'])): ?>
             <img src="<?php echo htmlspecialchars($data['gambar_mapel']); ?>" alt="Mapel" style="max-width: 100px; display: block; margin-bottom: 10px;">
-            <input type="hidden" name="current_mapel" value="<?php echo htmlspecialchars($data['gambar_mapel']); ?>">
+
           <?php endif; ?>
           <input type="file" id="gambar_mapel" name="gambar_mapel" accept="image/*" />
         </div>
@@ -164,7 +153,7 @@ if (!$data) {
           <?php if (!empty($data['gambar_materi'])): ?>
             <p style="margin-bottom: 10px;">Gambar saat ini:</p>
             <img src="<?php echo htmlspecialchars($data['gambar_materi']); ?>" alt="Gambar Materi" style="max-width: 200px; height: auto; display: block; margin-bottom: 15px; border: 2px solid var(--line); border-radius: 8px;">
-            <input type="hidden" name="current_gambar" value="<?php echo htmlspecialchars($data['gambar_materi']); ?>">
+
           <?php endif; ?>
           <input type="file" id="gambar_materi" name="gambar_materi" accept="image/*" />
           <small style="color: var(--muted);">Kosongkan jika tidak ingin mengubah gambar. Ukuran maksimal 5MB (JPG, JPEG, PNG, GIF).</small>
