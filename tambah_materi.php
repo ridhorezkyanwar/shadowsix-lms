@@ -1,87 +1,62 @@
 <?php
 session_start();
-include 'databasecpnel.php'; 
+require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/databasecpnel.php';
 
-// Proteksi halaman
-if (!isset($_SESSION['loggedin']) || $_SESSION['role'] !== 'admin') {
-    header("Location: login.php");
-    exit();
-}
+shadowsix_require_admin();
 
-$message_status = ''; 
+$message_status = '';
+$csrfToken = shadowsix_csrf_token();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nama_pelajaran = htmlspecialchars(strip_tags(trim($_POST["nama_pelajaran"])));
-    $judul_materi = htmlspecialchars(strip_tags(trim($_POST["judul_materi"])));
-    $isi_materi = trim($_POST["isi_materi"]); 
-    $gambar_materi = null; // Default null, akan diisi jika ada upload
-    $gambar_mapel = null;
-    $nama_guru = htmlspecialchars(strip_tags(trim($_POST["nama_guru"])));
-
-    if (!empty($nama_pelajaran) && !empty($judul_materi) && !empty($isi_materi)) {
-        // Handle image upload
-        if (isset($_FILES['gambar_materi']) && $_FILES['gambar_materi']['error'] == UPLOAD_ERR_OK) {
-            $target_dir = "uploads/materi/";
-            // Pastikan direktori ada
-            if (!is_dir($target_dir)) {
-                mkdir($target_dir, 0777, true);
-            }
-
-            $file_extension = pathinfo($_FILES['gambar_materi']['name'], PATHINFO_EXTENSION);
-            $new_file_name = uniqid('materi_') . '.' . $file_extension;
-            $target_file = $target_dir . $new_file_name;
-            $imageFileType = strtolower($file_extension);
-
-            // Validasi tipe file
-            $allowed_types = ['jpg', 'jpeg', 'png', 'gif'];
-            if (!in_array($imageFileType, $allowed_types)) {
-                $message_status = '<div class="status-msg error">Maaf, hanya file JPG, JPEG, PNG & GIF yang diizinkan.</div>';
-            } elseif ($_FILES['gambar_materi']['size'] > 5000000) { // 5MB
-                $message_status = '<div class="status-msg error">Maaf, ukuran file terlalu besar (maks 5MB).</div>';
-            } elseif (move_uploaded_file($_FILES['gambar_materi']['tmp_name'], $target_file)) {
-                $gambar_materi = $target_file;
-            } else {
-                $message_status = '<div class="status-msg error">Maaf, terjadi kesalahan saat mengunggah gambar.</div>';
-            }
-        }
-
-        // Handle image mapel upload
-        if (isset($_FILES['gambar_mapel']) && $_FILES['gambar_mapel']['error'] == UPLOAD_ERR_OK) {
-            $target_dir_mapel = "uploads/mapel/";
-            if (!is_dir($target_dir_mapel)) {
-                mkdir($target_dir_mapel, 0777, true);
-            }
-
-            $ext = pathinfo($_FILES['gambar_mapel']['name'], PATHINFO_EXTENSION);
-            $new_name = uniqid('mapel_') . '.' . $ext;
-            $target_f = $target_dir_mapel . $new_name;
-
-            $allowed = ['jpg', 'jpeg', 'png', 'gif'];
-            if (in_array(strtolower($ext), $allowed) && $_FILES['gambar_mapel']['size'] <= 5000000) {
-                if (move_uploaded_file($_FILES['gambar_mapel']['tmp_name'], $target_f)) {
-                    $gambar_mapel = $target_f;
-                }
-            }
-        }
-
-        // Hanya lanjutkan jika tidak ada error upload atau jika tidak ada gambar yang diupload
-        if (empty($message_status)) {
-            $stmt = $conn->prepare("INSERT INTO materi (nama_pelajaran, judul_materi, isi_materi, gambar_materi, gambar_mapel, nama_guru) VALUES (?, ?, ?, ?, ?, ?)");
-        
-            if ($stmt) {
-                $stmt->bind_param("ssssss", $nama_pelajaran, $judul_materi, $isi_materi, $gambar_materi, $gambar_mapel, $nama_guru);
-                if ($stmt->execute()) {
-                    $message_status = '<div class="status-msg success">Materi Berhasil Ditambahkan ke Database!</div>';
-                } else {
-                    $message_status = '<div class="status-msg error">Gagal menyimpan data ke database.</div>';
-                }
-            }
-            $stmt->close();
-        } else {
-            $message_status = '<div class="status-msg error">Kesalahan Sistem: ' . $conn->error . '</div>';
-        }
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!shadowsix_verify_csrf_token($_POST['csrf_token'] ?? null)) {
+        $message_status = '<div class="status-msg error">Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.</div>';
     } else {
-        $message_status = '<div class="status-msg error">Harap isi semua kolom form.</div>';
+        $nama_pelajaran = trim((string) ($_POST['nama_pelajaran'] ?? ''));
+        $judul_materi = trim((string) ($_POST['judul_materi'] ?? ''));
+        $isi_materi = trim((string) ($_POST['isi_materi'] ?? ''));
+        $nama_guru = trim((string) ($_POST['nama_guru'] ?? ''));
+
+        if (
+            $nama_pelajaran === '' || strlen($nama_pelajaran) > 100 ||
+            $judul_materi === '' || strlen($judul_materi) > 191 ||
+            $isi_materi === '' || strlen($isi_materi) > 60000 ||
+            strlen($nama_guru) > 100
+        ) {
+            $message_status = '<div class="status-msg error">Periksa kembali isian. Nama pelajaran maksimal 100 karakter, judul 191 karakter, nama guru 100 karakter, dan isi materi maksimal 60.000 byte.</div>';
+        } else {
+            $materiUpload = shadowsix_store_uploaded_image($_FILES['gambar_materi'] ?? null, 'materi');
+            $mapelUpload = shadowsix_store_uploaded_image($_FILES['gambar_mapel'] ?? null, 'mapel');
+
+            if ($materiUpload['error'] !== null || $mapelUpload['error'] !== null) {
+                shadowsix_delete_uploaded_image($materiUpload['path'], 'materi');
+                shadowsix_delete_uploaded_image($mapelUpload['path'], 'mapel');
+                $uploadError = $materiUpload['error'] ?? $mapelUpload['error'];
+                $message_status = '<div class="status-msg error">' . htmlspecialchars((string) $uploadError, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>';
+            } else {
+                $gambar_materi = $materiUpload['path'];
+                $gambar_mapel = $mapelUpload['path'];
+                $stmt = null;
+
+                try {
+                    $stmt = $conn->prepare(
+                        'INSERT INTO materi (nama_pelajaran, judul_materi, isi_materi, gambar_materi, gambar_mapel, nama_guru) VALUES (?, ?, ?, ?, ?, ?)'
+                    );
+                    $stmt->bind_param('ssssss', $nama_pelajaran, $judul_materi, $isi_materi, $gambar_materi, $gambar_mapel, $nama_guru);
+                    $stmt->execute();
+                    $message_status = '<div class="status-msg success">Materi berhasil ditambahkan.</div>';
+                } catch (Throwable $e) {
+                    error_log('ShadowSix: failed to add material: ' . $e->getMessage());
+                    shadowsix_delete_uploaded_image($gambar_materi, 'materi');
+                    shadowsix_delete_uploaded_image($gambar_mapel, 'mapel');
+                    $message_status = '<div class="status-msg error">Materi tidak dapat disimpan. Periksa konfigurasi dan coba lagi.</div>';
+                } finally {
+                    if ($stmt instanceof mysqli_stmt) {
+                        $stmt->close();
+                    }
+                }
+            }
+        }
     }
 }
 ?>
@@ -115,6 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <?php echo $message_status; ?>
 
       <form action="tambah_materi.php" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
         <div class="form-group">
           <label for="nama_pelajaran">Nama Pelajaran</label>
           <input type="text" id="nama_pelajaran" name="nama_pelajaran" placeholder="Misal: Pemrograman Web" required />
