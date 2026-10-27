@@ -1,11 +1,14 @@
 <?php
 session_start();
+require_once __DIR__ . '/security.php';
+
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    header("Location: index.php");
+    header('Location: index.php');
     exit();
 }
 
-$username = $_SESSION['username'];
+$username = (string) ($_SESSION['username'] ?? 'pengguna');
+$csrfToken = shadowsix_csrf_token();
 ?>
 
 <!DOCTYPE html>
@@ -44,7 +47,10 @@ $username = $_SESSION['username'];
         
         <div class="logout-actions">
             <a href="index.php" class="login-btn" style="text-decoration: none; width: 100%; margin-bottom: 12px;">Gajadi, Lanjut Belajar!</a>
-            <a href="konfirmlogout.php" class="login-btn logout-btn" style="text-decoration: none; width: 100%;">Iya, Keluar Aja</a>
+            <form action="konfirmlogout.php" method="POST" style="width: 100%;">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
+                <button type="submit" class="login-btn logout-btn" style="text-decoration: none; width: 100%; border: 0; cursor: pointer;">Iya, Keluar Aja</button>
+            </form>
         </div>
     </div>
     </div>
