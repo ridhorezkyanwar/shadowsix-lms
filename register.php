@@ -1,40 +1,63 @@
 <?php
 session_start();
-include 'databasecpnel.php';
+require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/databasecpnel.php';
 
 $message = '';
+$csrfToken = shadowsix_csrf_token();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST"){
-
-  $fullname = $_POST['fullname'];
-  $email = $_POST['email'];
-  $password = $_POST['password'];
-
-  $stmt = $conn->prepare("SELECT email FROM login WHERE email = ?");
-  $stmt->bind_param("s", $email);
-  $stmt->execute();
-  $result = $stmt->get_result();
-
-  if($result->num_rows > 0){
-    $message = "Email sudah terdaftar, silakan gunakan email lain.";
-  } else {
-    // Hanya insert jika email belum ada
-    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-
-    // Gunakan prepared statement untuk insert
-    $stmt_insert = $conn->prepare("INSERT INTO login (fullname, email, password) VALUES (?, ?, ?)");
-    $stmt_insert->bind_param("sss", $fullname, $email, $hashed_password);
-
-    if($stmt_insert->execute()){
-      // Redirect ke halaman login setelah berhasil registrasi
-      header("Location: login.php");
-      exit();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!shadowsix_verify_csrf_token($_POST['csrf_token'] ?? null)) {
+        $message = 'Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.';
     } else {
-      $message = "Error: " . $stmt_insert->error;
+        $fullnameValue = $_POST['fullname'] ?? '';
+        $emailValue = $_POST['email'] ?? '';
+        $passwordValue = $_POST['password'] ?? '';
+
+        if (!is_string($fullnameValue) || !is_string($emailValue) || !is_string($passwordValue)) {
+            $message = 'Data pendaftaran tidak valid.';
+        } else {
+            $fullname = trim(strip_tags($fullnameValue));
+            $email = strtolower(trim($emailValue));
+            $password = $passwordValue;
+
+            if (
+                $fullname === '' || strlen($fullname) > 100 ||
+                strlen($email) > 191 || !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+                strlen($password) < 12 || strlen($password) > 72
+            ) {
+                $message = 'Isi nama dan email yang valid. Kata sandi harus 12–72 byte.';
+            } else {
+                $stmt = null;
+                try {
+                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                    if ($hashedPassword === false) {
+                        throw new RuntimeException('Password hashing failed.');
+                    }
+
+                    $stmt = $conn->prepare('INSERT INTO login (fullname, email, password) VALUES (?, ?, ?)');
+                    $stmt->bind_param('sss', $fullname, $email, $hashedPassword);
+                    $stmt->execute();
+                    header('Location: login.php?registered=1');
+                    exit();
+                } catch (mysqli_sql_exception $e) {
+                    if ((int) $e->getCode() === 1062) {
+                        $message = 'Email sudah terdaftar, silakan gunakan email lain.';
+                    } else {
+                        error_log('ShadowSix: registration failed with database error code ' . (int) $e->getCode() . '.');
+                        $message = 'Pendaftaran tidak dapat diproses saat ini. Silakan coba lagi nanti.';
+                    }
+                } catch (Throwable $e) {
+                    error_log('ShadowSix: registration failed: ' . get_class($e));
+                    $message = 'Pendaftaran tidak dapat diproses saat ini. Silakan coba lagi nanti.';
+                } finally {
+                    if ($stmt instanceof mysqli_stmt) {
+                        $stmt->close();
+                    }
+                }
+            }
+        }
     }
-    $stmt_insert->close();
-  }
-  $stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -55,6 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
         </div>
 
         <form action="register.php" method="POST">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
           <label class="login-label" for="username">Username</label>
           <input
             class="login-input"
@@ -80,7 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
               type="password"
               id="password"
               name="password"
-              placeholder="Enter your password"
+              placeholder="Use 12–72 bytes" minlength="12" maxlength="72"
               required
             />
             <button
