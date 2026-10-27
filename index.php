@@ -124,8 +124,13 @@ include 'databasecpnel.php';
                   $color_index++;
                   
 
-                  $nama_pelajaran = htmlspecialchars($nama_pelajaran_raw);
-                  $icon_content = !empty($image_path) ? '<img src="' . $image_path . '" alt="' . $nama_pelajaran . '">' : substr($nama_pelajaran_raw, 0, 1);
+                  $nama_pelajaran = htmlspecialchars($nama_pelajaran_raw, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                  $safe_image_path = is_string($image_path)
+                      ? htmlspecialchars($image_path, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                      : '';
+                  $icon_content = $safe_image_path !== ''
+                      ? '<img src="' . $safe_image_path . '" alt="' . $nama_pelajaran . '">'
+                      : htmlspecialchars(substr($nama_pelajaran_raw, 0, 1), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
 
                   $stmt_desc = $conn->prepare("SELECT judul_materi, nama_guru FROM materi WHERE nama_pelajaran = ? ORDER BY id ASC LIMIT 1");
@@ -145,7 +150,7 @@ include 'databasecpnel.php';
                       $stmt_desc->close();
                   }
 
-                  echo '<a href="' . $link_mapel . '" class="subject-card">';
+                  echo '<a href="' . htmlspecialchars($link_mapel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '" class="subject-card">';
                   echo '<div class="subject-icon" style="color: ' . $current_color . ';">' . $icon_content . '</div>'; // Menggunakan gambar atau huruf pertama sebagai ikon
                   echo $nama_pelajaran;
                   echo '<br><span style="font-size: 0.9em; color: var(--muted);">' . $deskripsi_singkat . '</span>'; // Deskripsi singkat (judul materi pertama)
