@@ -40,9 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         is_string($contactTo) && filter_var($contactTo, FILTER_VALIDATE_EMAIL) &&
                         is_string($mailFrom) && filter_var($mailFrom, FILTER_VALIDATE_EMAIL)
                     ) {
-                        $safeReplyEmail = str_replace(["\\r", "\\n"], '', $email);
-                        $body = "Nama: " . $name . "\\nEmail: " . $safeReplyEmail . "\\n\\nPesan:\\n" . $message;
-                        $headers = "From: " . $mailFrom . "\\r\\nReply-To: " . $safeReplyEmail;
+                        $safeReplyEmail = str_replace(["\r", "\n"], '', $email);
+                        $body = "Nama: " . $name . "\nEmail: " . $safeReplyEmail . "\n\nPesan:\n" . $message;
+                        $headers = "From: " . $mailFrom . "\r\nReply-To: " . $safeReplyEmail;
                         if (@mail($contactTo, 'Pesan baru dari formulir ShadowSix', $body, $headers)) {
                             $message_status = '<div class="status-success">Pesan tersimpan dan notifikasi email telah diserahkan ke server email.</div>';
                         } else {
