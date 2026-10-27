@@ -1,40 +1,68 @@
 <?php
 session_start();
-include '../databasecpnel.php'; 
-$message_status = ''; 
+require_once __DIR__ . '/../security.php';
+require_once __DIR__ . '/../databasecpnel.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = htmlspecialchars(strip_tags(trim($_POST["name"])));
-    $email = htmlspecialchars(strip_tags(trim($_POST["email"])));
-    $message = htmlspecialchars(strip_tags(trim($_POST["message"]))); 
+$message_status = '';
+$csrfToken = shadowsix_csrf_token();
 
-    if (!empty($name) && !empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL) && !empty($message)) {
-        $stmt = $conn->prepare("INSERT INTO kontak (nama, email, pesan) VALUES (?, ?, ?)");
-        if ($stmt) {
-            $stmt->bind_param("sss", $name, $email, $message);
-
-            if ($stmt->execute()) {
-                $message_status = '<div class="status-success">Pesan Anda berhasil terkirim.</div>';
-                
-                $to = "admin@situsanda.com"; 
-                $subject = "Pesan Baru dari $name";
-                $body = "Nama: $name\nEmail: $email\nPesan: $message";
-                $headers = "From: no-reply@ridho10.ukk-rpl.site";
-                
-                @mail($to, $subject, $body, $headers);
-
-            } else {
-                $message_status = '<div class="status-error">Gagal menyimpan pesan ke database.</div>';
-            }
-            $stmt->close();
-        } else {
-            $message_status = '<div class="status-error">Kesalahan Database: ' . $conn->error . '</div>';
-        }
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!shadowsix_verify_csrf_token($_POST['csrf_token'] ?? null)) {
+        $message_status = '<div class="status-error">Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.</div>';
     } else {
-        $message_status = '<div class="status-error">Harap isi semua kolom dengan benar.</div>';
+        $nameValue = $_POST['name'] ?? '';
+        $emailValue = $_POST['email'] ?? '';
+        $messageValue = $_POST['message'] ?? '';
+
+        if (!is_string($nameValue) || !is_string($emailValue) || !is_string($messageValue)) {
+            $message_status = '<div class="status-error">Data formulir tidak valid.</div>';
+        } else {
+            $name = trim($nameValue);
+            $email = strtolower(trim($emailValue));
+            $message = trim($messageValue);
+
+            if (
+                $name === '' || strlen($name) > 100 ||
+                strlen($email) > 191 || !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+                $message === '' || strlen($message) > 5000
+            ) {
+                $message_status = '<div class="status-error">Isi nama, email yang valid, dan pesan maksimal 5.000 byte.</div>';
+            } else {
+                $stmt = null;
+                try {
+                    $stmt = $conn->prepare('INSERT INTO kontak (nama, email, pesan) VALUES (?, ?, ?)');
+                    $stmt->bind_param('sss', $name, $email, $message);
+                    $stmt->execute();
+
+                    $contactTo = getenv('CONTACT_EMAIL');
+                    $mailFrom = getenv('MAIL_FROM');
+                    if (
+                        is_string($contactTo) && filter_var($contactTo, FILTER_VALIDATE_EMAIL) &&
+                        is_string($mailFrom) && filter_var($mailFrom, FILTER_VALIDATE_EMAIL)
+                    ) {
+                        $safeReplyEmail = str_replace(["\\r", "\\n"], '', $email);
+                        $body = "Nama: " . $name . "\\nEmail: " . $safeReplyEmail . "\\n\\nPesan:\\n" . $message;
+                        $headers = "From: " . $mailFrom . "\\r\\nReply-To: " . $safeReplyEmail;
+                        if (@mail($contactTo, 'Pesan baru dari formulir ShadowSix', $body, $headers)) {
+                            $message_status = '<div class="status-success">Pesan tersimpan dan notifikasi email telah diserahkan ke server email.</div>';
+                        } else {
+                            $message_status = '<div class="status-success">Pesan tersimpan, tetapi notifikasi email gagal dikirim. Administrator perlu memeriksa konfigurasi email.</div>';
+                        }
+                    } else {
+                        $message_status = '<div class="status-success">Pesan tersimpan. Notifikasi email belum dikonfigurasi oleh administrator.</div>';
+                    }
+                } catch (Throwable $e) {
+                    error_log('ShadowSix: contact form submission failed: ' . get_class($e));
+                    $message_status = '<div class="status-error">Pesan tidak dapat disimpan saat ini. Silakan coba lagi nanti.</div>';
+                } finally {
+                    if ($stmt instanceof mysqli_stmt) {
+                        $stmt->close();
+                    }
+                }
+            }
+        }
     }
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -87,6 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php echo $message_status; ?>
 
         <form class="contact-form" action="kontak.php" method="POST">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
           <label for="name">Nama</label>
           <input type="text" id="name" name="name" required />
 
