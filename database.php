@@ -1,12 +1,5 @@
 <?php
-$servername = "localhost";      
-$username_db = "root";          
-$password_db = "";              
-$dbname = "shadowsix"; 
+declare(strict_types=1);
 
-$conn = new mysqli($servername, $username_db, $password_db, $dbname);
-
-if ($conn->connect_error) {
-    die("Koneksi ke database gagal: " . $conn->connect_error);
-}
-?>
+// Backward-compatible entry point for files that include database.php.
+require_once __DIR__ . '/databasecpnel.php';
