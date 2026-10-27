@@ -1,0 +1,61 @@
+name: PHP quality checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  php-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify PHP runtime
+        run: |
+          php --version
+          php -m
+
+      - name: Lint every PHP file
+        shell: bash
+        run: |
+          set -o pipefail
+          find . -type f -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Run security helper tests
+        run: php tests/security_helpers_test.php
+
+      - name: Check for private database exports and hard-coded database passwords
+        shell: bash
+        run: |
+          test ! -e ridho10_shadowsix.sql || { echo "::error::Private database export is present in the repository."; exit 1; }
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          assignment_patterns = [
+              re.compile(r"""(?i)\$password_db\s*=\s*["'][^"']+["']"""),
+              re.compile(r"""(?i)(?:DB_PASSWORD|PASSWORD_DB)\s*[:=]\s*["'][^"']+["']"""),
+          ]
+          matches = []
+          for path in Path(".").rglob("*.php"):
+              if ".git" in path.parts:
+                  continue
+              content = path.read_text(encoding="utf-8", errors="replace")
+              if any(pattern.search(content) for pattern in assignment_patterns):
+                  matches.append(str(path))
+          if matches:
+              print("Potential hard-coded database password assignment found in: " + ", ".join(matches))
+              sys.exit(1)
+          print("PASS: no obvious hard-coded database password assignments in PHP files.")
+          PY
