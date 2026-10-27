@@ -1,0 +1,33 @@
+name: ShadowSix PHP syntax checks
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Install PHP CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y php-cli
+      - name: Lint every PHP source file
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' php_files < <(find . -type f -name '*.php' -not -path './vendor/*' -print0)
+          if [ "${#php_files[@]}" -eq 0 ]; then
+            echo "No PHP source files found."
+            exit 1
+          fi
+          for file in "${php_files[@]}"; do
+            php -l "$file"
+          done
