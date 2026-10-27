@@ -1,0 +1,22 @@
+# Private server/local configuration
+.env
+.env.*
+!.env.example
+.htaccess
+config.local.php
+
+# Generated user uploads (keep upload protection file tracked)
+uploads/*
+!uploads/.htaccess
+!uploads/materi/
+!uploads/mapel/
+uploads/materi/*
+uploads/mapel/*
+
+# Local/generated files
+*.log
+.DS_Store
+Thumbs.db
+__filelist.txt
+tmp_changed_files.txt
+tmp_status.txt
