@@ -1,12 +1,6 @@
 <?php
-$servername   = "localhost";      
-$username_db  = "ridho10_userdb";        
-$password_db  = "admintelecom#";       
-$dbname       = "ridho10_shadowsix";   
+declare(strict_types=1);
 
-$conn_kontak = new mysqli($servername, $username_db, $password_db, $dbname);
-
-if ($conn_kontak->connect_error) {
-    die("Koneksi ke database kontak gagal: " . $conn_kontak->connect_error);
-}
-?>
+// Backward-compatible alias for the shared database connection.
+require_once __DIR__ . '/databasecpnel.php';
+$conn_kontak = $conn;
