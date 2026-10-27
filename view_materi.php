@@ -1,6 +1,7 @@
 <?php
 session_start();
-include 'databasecpnel.php';
+require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/databasecpnel.php';
 
 // Proteksi halaman jika perluuu
 // if (!isset($_SESSION['loggedin'])) {
@@ -170,7 +171,7 @@ if ($nama_pelajaran_raw == 'Bahasa Indonesia') {
                 <?php if (!empty($materi['gambar_materi'])): ?>
                     <img src="<?php echo htmlspecialchars($materi['gambar_materi']); ?>" alt="<?php echo htmlspecialchars($materi['judul_materi']); ?>">
                 <?php endif; ?>
-                <?php echo $materi['isi_materi']; ?>
+                <?php echo shadowsix_sanitize_rich_html((string) $materi['isi_materi']); ?>
             </div>
         </div>
     </main>
