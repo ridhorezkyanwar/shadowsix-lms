@@ -1,9 +1,11 @@
-# Private server/local configuration
+# Local environment secrets. Only the placeholder template is tracked.
 .env
 .env.*
 !.env.example
-.htaccess
 config.local.php
+
+# .htaccess is tracked only for non-secret security rules.
+# Never put hosting credentials or private environment values in it.
 
 # Generated user uploads (keep upload protection file tracked)
 uploads/*
