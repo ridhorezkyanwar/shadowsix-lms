@@ -1,5 +1,7 @@
 FROM php:8.3-apache-bookworm
 
+COPY docker/apache-security.conf /etc/apache2/conf-available/shadowsix-security.conf
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && docker-php-ext-install mysqli \
@@ -19,7 +21,6 @@ RUN apt-get update \
     } > "$PHP_INI_DIR/conf.d/zz-shadowsix.ini" \
     && rm -rf /var/lib/apt/lists/*
 
-COPY docker/apache-security.conf /etc/apache2/conf-available/shadowsix-security.conf
 COPY . /var/www/html/
 
 RUN mkdir -p /var/www/html/uploads/materi /var/www/html/uploads/mapel \
