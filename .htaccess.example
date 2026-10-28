@@ -1,8 +1,8 @@
-# LOCAL DEVELOPMENT TEMPLATE ONLY.
-# Copy to .htaccess, update for your local XAMPP database, and never commit .htaccess.
+# LOCAL DEVELOPMENT SNIPPET ONLY.
+# Do not copy this over the tracked .htaccess; that file contains shared security rules.
+# Put these SetEnv lines in your local Apache VirtualHost configuration outside the repo.
+# These example settings are only for a local XAMPP database; never use them on a public host.
 SetEnv DB_HOST "localhost"
 SetEnv DB_USER "root"
 SetEnv DB_PASSWORD ""
 SetEnv DB_NAME "shadowsix"
-
-Options -Indexes
