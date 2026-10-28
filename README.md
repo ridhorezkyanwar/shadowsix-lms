@@ -73,7 +73,7 @@ The health endpoint reports only `ok` or `unavailable`; it never returns databas
    - `DB_PASSWORD`: that user's password (XAMPP installations may use an empty password locally)
    - `DB_NAME`: `shadowsix`
 
-For local XAMPP only, `.htaccess.example` shows one way to set these variables through Apache. Copy it to `.htaccess` and edit the values for your local database. The real `.htaccess` is ignored by Git and must not be committed. On hosting, set the variables through the hosting control panel or server configuration instead. Confirm the host supports the chosen environment-variable mechanism before deploying.
+The tracked root `.htaccess` contains non-secret hardening rules and should not be overwritten. For local XAMPP, use the SetEnv snippet in `.htaccess.example` inside your local Apache VirtualHost configuration outside this repository; do not add database settings to the tracked file. On hosted environments, set `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` through the hosting provider's private environment settings. Confirm the host supports the chosen mechanism before deploying.
 
 ### Read-only database preflight
 
