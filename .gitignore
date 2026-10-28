@@ -15,6 +15,15 @@ uploads/*
 uploads/materi/*
 uploads/mapel/*
 
+# Database exports/backups are private data; keep the schema-only shadowsix.sql tracked.
+ridho10_shadowsix.sql
+*_backup.sql
+*backup*.sql
+*_dump.sql
+*dump*.sql
+*.sql.gz
+*.dump
+
 # Local/generated files
 *.log
 .DS_Store
