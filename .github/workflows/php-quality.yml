@@ -68,6 +68,9 @@ jobs:
       - name: Verify MariaDB schema and application CRUD
         run: php tests/database_integration_test.php
 
+      - name: Verify live read-only database preflight
+        run: php scripts/db_preflight.php
+
       - name: Validate container configuration
         run: docker compose config --quiet
 
