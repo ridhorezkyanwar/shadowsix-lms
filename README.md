@@ -62,26 +62,20 @@ To stop services while preserving data, use `docker compose down`. Do not use `d
 The health endpoint reports only `ok` or `unavailable`; it never returns database hostnames, table names, or credentials.
 The cPanel bundle omits legacy `.html` duplicates because PHP is the actual LMS entry point; the bundled `.htaccess` also sets `DirectoryIndex index.php index.html` to prioritize the session-aware PHP home page.
 
-## Deploy to InfinityFree (free PHP + MySQL hosting)
+## Deploy to HelioHost (free PHP + MariaDB hosting)
 
-This repository now includes a guarded GitHub Actions FTPS deployment workflow for shared hosting. It deliberately does not upload database dumps, private configuration files, test scripts, Docker files or existing user uploads.
+The repository includes a guarded GitHub Actions FTPS workflow for HelioHost's free Johnny hosting. HelioHost's published terms state that users must be at least 13; always register with accurate details and do not falsify age. Free-account availability can be limited by capacity, and the Johnny plan requires a control-panel login at least monthly.
 
-1. Create a free hosting account at [InfinityFree](https://dash.infinityfree.com/register), create a hosting account/subdomain, and open its control panel. Use the free plan only; no paid upgrade is needed.
-2. In the control panel, create a MySQL database and open phpMyAdmin. Download or use the tracked `shadowsix.sql` file from the repository to import the schema. It creates only the `login`, `materi`, and `kontak` tables. It contains no users, password hashes, or contact messages.
-3. In the host's file manager, copy `config.local.example.php` to `config.local.php` in the site root (`htdocs/`). Fill in the exact MySQL hostname, full database username, password, and database name shown in the hosting control panel. Keep the populated `config.local.php` private; it is ignored by Git and blocked by `.htaccess`. Do not add the values to GitHub Actions logs or commit them.
-4. In GitHub, open **Settings → Secrets and variables → Actions** for this repository, then create these repository secrets from the hosting panel's FTP details:
-   - `FTP_SERVER`: FTP hostname only, without `ftp://` or a path.
-   - `FTP_USERNAME`: full FTP username.
-   - `FTP_PASSWORD`: FTP password.
-   - `FTP_SERVER_DIR`: exactly `htdocs/`.
-5. Open **Actions → Deploy ShadowSix to InfinityFree → Run workflow**. The first run defaults to a dry run, which only previews changes. Review it before running again with `dry_run=false` to publish the files. The workflow uses FTPS, fails closed if secrets are missing or the target directory differs from `htdocs/`, and never uses the destructive clean-slate option.
-6. Visit the new HTTPS subdomain and `/health.php`. A healthy database connection returns `{"status":"ok"}`; a configuration or database issue returns a generic unavailable response without exposing credentials.
+1. Create an account at [HelioHost signup](https://heliohost.org/signup/) using your real information, then create a free Johnny hosting account and choose a domain/subdomain offered by Plesk.
+2. In Plesk, create a MariaDB database and database user. Import [`shadowsix.sql`](https://raw.githubusercontent.com/ridhorezkyanwar/shadowsix-lms/main/shadowsix.sql) into that database using phpMyAdmin. The SQL file is schema-only and does not include user accounts, password hashes, teaching materials, or contact messages.
+3. In Plesk File Manager, copy `config.local.example.php` to `httpdocs/config.local.php` and fill the database hostname, full database name, username, and password shown in Plesk. Keep the populated file on the server only; it is excluded from Git and from the deployment workflow.
+4. In GitHub, open **Settings → Secrets and variables → Actions**, then create the repository secrets `HELIOHOST_FTP_USERNAME` and `HELIOHOST_FTP_PASSWORD` with the system user's FTP username/password from Plesk.
+5. Open **Actions → Deploy ShadowSix to HelioHost → Run workflow**. The workflow targets the official Johnny server via strict FTPS and `httpdocs/`; it defaults to a dry run. Inspect the proposed changes before running again with `dry_run=false`.
+6. Open the exact domain assigned in Plesk, verify HTTPS, then visit `/health.php`. A healthy database returns `{"status":"ok"}`; errors return a generic unavailable response without exposing credentials.
 
-The schema intentionally does not create an administrator. Register your own account through the website, then use phpMyAdmin on your own database to grant that account the admin role:
-`UPDATE login SET role = 'admin' WHERE email = 'your-own-registered-email@example.test';`
-Replace the email with the address of the account you registered; do not use an account belonging to another person.
+The workflow runs only when manually triggered, does not enable destructive clean-slate syncing, excludes database exports/private config/tests/Docker files, and preserves uploaded-image directories. Review [DEPLOYMENT.md](DEPLOYMENT.md) for the full steps and backup guidance.
 
-The workflow excludes files inside `uploads/materi/` and `uploads/mapel/` from syncing so future deployments do not delete user-uploaded images. Do not turn on destructive clean-slate syncing, and keep a separate database export before any schema changes.
+**Existing data is not included.** The repository has a schema-only SQL file. If the old hosting account was deleted, existing user accounts, materials, contact messages, and uploaded images can be restored only from a backup you already have; the repo and deploy workflow cannot reconstruct lost records.
 
 ## Run locally with XAMPP
 
