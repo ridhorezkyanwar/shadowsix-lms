@@ -104,7 +104,45 @@ try {
     );
     $insertMaterial->bind_param('ssssss', $subject, $title, $body, $image, $image, $teacher);
     $insertMaterial->execute();
+    $materialId = (int) $insertMaterial->insert_id;
     $insertMaterial->close();
+
+    $fetchMaterial = $connection->prepare('SELECT nama_pelajaran, judul_materi, isi_materi FROM materi WHERE id = ?');
+    $fetchMaterial->bind_param('i', $materialId);
+    $fetchMaterial->execute();
+    $material = $fetchMaterial->get_result()->fetch_assoc();
+    $fetchMaterial->close();
+    database_test_expect(is_array($material), 'An inserted material should be retrievable by its primary key.');
+    database_test_expect($material['nama_pelajaran'] === $subject && $material['judul_materi'] === $title, 'Material fields should round-trip correctly.');
+
+    $updatedTitle = 'Database integration test updated';
+    $updateMaterial = $connection->prepare('UPDATE materi SET judul_materi = ? WHERE id = ?');
+    $updateMaterial->bind_param('si', $updatedTitle, $materialId);
+    $updateMaterial->execute();
+    $updatedRows = $updateMaterial->affected_rows;
+    $updateMaterial->close();
+    database_test_expect($updatedRows === 1, 'An existing material should be updateable.');
+
+    $fetchUpdatedMaterial = $connection->prepare('SELECT judul_materi FROM materi WHERE id = ?');
+    $fetchUpdatedMaterial->bind_param('i', $materialId);
+    $fetchUpdatedMaterial->execute();
+    $updatedMaterial = $fetchUpdatedMaterial->get_result()->fetch_assoc();
+    $fetchUpdatedMaterial->close();
+    database_test_expect(is_array($updatedMaterial) && $updatedMaterial['judul_materi'] === $updatedTitle, 'Updated material should persist inside the transaction.');
+
+    $deleteMaterial = $connection->prepare('DELETE FROM materi WHERE id = ?');
+    $deleteMaterial->bind_param('i', $materialId);
+    $deleteMaterial->execute();
+    $deletedRows = $deleteMaterial->affected_rows;
+    $deleteMaterial->close();
+    database_test_expect($deletedRows === 1, 'An existing material should be deleteable.');
+
+    $verifyDeletedMaterial = $connection->prepare('SELECT COUNT(*) AS count FROM materi WHERE id = ?');
+    $verifyDeletedMaterial->bind_param('i', $materialId);
+    $verifyDeletedMaterial->execute();
+    $deletedCount = (int) $verifyDeletedMaterial->get_result()->fetch_assoc()['count'];
+    $verifyDeletedMaterial->close();
+    database_test_expect($deletedCount === 0, 'A deleted material should no longer be visible within the transaction.');
 
     $contactName = 'CI Test';
     $contactEmail = 'contact-ci@example.invalid';
@@ -114,17 +152,13 @@ try {
     $insertContact->execute();
     $insertContact->close();
 
-    $materialCount = (int) $connection->query(
-        "SELECT COUNT(*) AS count FROM materi WHERE judul_materi = 'Database integration test'"
-    )->fetch_assoc()['count'];
     $contactCount = (int) $connection->query(
         "SELECT COUNT(*) AS count FROM kontak WHERE email = 'contact-ci@example.invalid'"
     )->fetch_assoc()['count'];
 
-    database_test_expect($materialCount === 1, 'Material records should be insertable.');
-    database_test_expect($contactCount === 1, 'Contact records should be insertable.');
+    database_test_expect($contactCount === 1, 'Contact records should be insertable and retrievable.');
 
-    echo "PASS: schema import, idempotence, account constraints, password hashing and LMS CRUD." . PHP_EOL;
+    echo "PASS: idempotent schema import, account uniqueness, password hashing, material insert/read/update/delete, and contact insert/read." . PHP_EOL;
 } finally {
     $connection->rollback();
     $connection->close();
