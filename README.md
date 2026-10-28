@@ -54,6 +54,10 @@ ShadowSix is a PHP and MySQL/MariaDB learning-management project built for a sch
 
 For local XAMPP only, `.htaccess.example` shows one way to set these variables through Apache. Copy it to `.htaccess` and edit the values for your local database. The real `.htaccess` is ignored by Git and must not be committed. On hosting, set the variables through the hosting control panel or server configuration instead. Confirm the host supports the chosen environment-variable mechanism before deploying.
 
+### Read-only database preflight
+
+Run `php scripts/db_preflight.php --schema-only` to check the committed schema without a server or database connection. On the PHP host (for example, through its CLI/terminal), run `php scripts/db_preflight.php` after setting the private `DB_*` variables. The live check reads only table metadata and makes no schema or record changes. It is CLI-only and does not print database credentials or raw connection errors. Do not expose the command via a web request or paste database passwords into GitHub.
+
 Optional contact-email settings are `CONTACT_EMAIL` (destination address) and `MAIL_FROM` (a sender address authorized by your host). Without both values, the form stores the message in the database but does not send an email. A successful `mail()` return means the mail server accepted the message for handling; it does not guarantee delivery.
 
 Open `http://localhost/shadowsix-lms/index.php`. Register a new account to test the student flow. The schema does not create a default administrator. To grant admin access on your own development database after registering, run a deliberate database operation such as `UPDATE login SET role = 'admin' WHERE email = 'your-own-address@example.test';` with your own registered email. Never put real account credentials or data in the repository.
