@@ -1,25 +1,25 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/config_loader.php';
+
 /*
- * Database configuration is injected by the server environment.
- * Required: DB_USER, DB_PASSWORD (may be empty for local XAMPP only), DB_NAME.
- * Optional: DB_HOST (defaults to localhost).
+ * Shared DB connection used across the application.
+ * Private settings come from config.local.php on shared hosting or DB_*
+ * environment variables on Docker/CI. Credentials never belong in Git.
  */
-
-$dbHost = getenv('DB_HOST');
-$dbUser = getenv('DB_USER');
-$dbPassword = getenv('DB_PASSWORD');
-$dbName = getenv('DB_NAME');
-
-$dbHost = ($dbHost === false || trim($dbHost) === '') ? 'localhost' : $dbHost;
+$dbConfig = shadowsix_database_config();
+$dbHost = $dbConfig['DB_HOST'];
+$dbUser = $dbConfig['DB_USER'];
+$dbPassword = $dbConfig['DB_PASSWORD'];
+$dbName = $dbConfig['DB_NAME'];
 
 if (
-    $dbUser === false || trim($dbUser) === '' ||
-    $dbPassword === false ||
-    $dbName === false || trim($dbName) === ''
+    !is_string($dbUser) || trim($dbUser) === '' ||
+    !is_string($dbPassword) ||
+    !is_string($dbName) || trim($dbName) === ''
 ) {
-    error_log('ShadowSix: required database environment variables are missing.');
+    error_log('ShadowSix: required database configuration is missing.');
     http_response_code(503);
     exit('Layanan basis data belum dikonfigurasi. Silakan hubungi administrator.');
 }
