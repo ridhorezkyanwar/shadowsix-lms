@@ -1,0 +1,41 @@
+name: PHP CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, fileinfo, dom
+          coverage: none
+      - name: Lint tracked PHP files
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            php -l "$file"
+          done < <(git ls-files -z '*.php')
+      - name: Check schema table declarations
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f shadowsix.sql
+          grep -Fq 'CREATE TABLE IF NOT EXISTS `login`' shadowsix.sql
+          grep -Fq 'CREATE TABLE IF NOT EXISTS `materi`' shadowsix.sql
+          grep -Fq 'CREATE TABLE IF NOT EXISTS `kontak`' shadowsix.sql
