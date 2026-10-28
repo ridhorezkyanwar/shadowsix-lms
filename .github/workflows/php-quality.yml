@@ -71,8 +71,30 @@ jobs:
       - name: Validate container configuration
         run: docker compose config --quiet
 
-      - name: Build production container
-        run: docker build --pull -t shadowsix-lms:ci .
+      - name: Build and smoke-test the PHP + MariaDB stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose up --build -d
+          cleanup() {
+            docker compose down -v --remove-orphans
+          }
+          trap cleanup EXIT
+
+          ready=0
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent http://127.0.0.1:8080/health.php | grep -Fxq '{"status":"ok"}'; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          test "$ready" -eq 1
+
+          curl --fail --silent --show-error http://127.0.0.1:8080/index.php -o /tmp/shadowsix-home.html
+          grep -qi 'ShadowSix' /tmp/shadowsix-home.html
+          dockerfile_status="$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/Dockerfile)"
+          test "$dockerfile_status" = "403"
 
       - name: Check for private database exports and hard-coded database passwords
         shell: bash
