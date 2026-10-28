@@ -14,32 +14,15 @@ function shadowsix_health_unavailable(): never
     exit;
 }
 
-$dbConfig = shadowsix_database_config();
-$dbUser = $dbConfig['DB_USER'];
-$dbPassword = $dbConfig['DB_PASSWORD'];
-$dbName = $dbConfig['DB_NAME'];
-$dbHost = $dbConfig['DB_HOST'];
-
-if (
-    !is_string($dbUser) || trim($dbUser) === '' ||
-    !is_string($dbPassword) ||
-    !is_string($dbName) || trim($dbName) === '' ||
-    !class_exists(mysqli::class)
-) {
-    error_log('ShadowSix health check unavailable: database configuration or mysqli extension is missing.');
-    shadowsix_health_unavailable();
-}
-
 try {
-    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    $connection = new mysqli($dbHost, $dbUser, $dbPassword, $dbName);
-    $connection->set_charset('utf8mb4');
+    $connection = shadowsix_open_database(shadowsix_database_config());
     $connection->query('SELECT 1');
     $connection->close();
 
     http_response_code(200);
     echo json_encode(['status' => 'ok'], JSON_UNESCAPED_SLASHES);
 } catch (Throwable $exception) {
+    // Never return a hostname, table name, SQL message or credential to callers.
     error_log('ShadowSix health check failed: ' . get_class($exception));
     shadowsix_health_unavailable();
 }
