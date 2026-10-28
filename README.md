@@ -64,6 +64,23 @@ The application reads `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` from th
 
 **Important:** any database credential previously committed to a public repository must be considered exposed. Rotate the old password in the hosting/database control panel, update the private environment configuration, and review access logs. Removing a file from the current branch does not erase earlier Git commits; history cleanup may be needed if a secret was committed.
 
+## Continuous integration
+
+Every push and pull request should run a PHP syntax check across application PHP files and verify that the database schema contains the expected tables. Static checks do not connect to, mutate, or prove the health of a hosted database.
+
+## Production deployment checklist (cPanel / Apache + MySQL)
+
+The repository does not contain a deployment-provider API or production database credentials. Before changing a live site:
+
+1. Confirm the hosting account, document root, PHP version/extensions, and whether Git Version Control or another deployment mechanism is configured.
+2. Export a database backup from the hosting control panel/phpMyAdmin and verify that the backup file is readable. Back up uploaded files separately; they are not part of the SQL schema.
+3. Compare the live schema with `shadowsix.sql`. The file creates the three tables on a fresh database; it is not a data migration and does not update existing rows or provision an administrator.
+4. Deploy application files without overwriting private server configuration or user uploads. Configure `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` in the host's private environment settings.
+5. Run smoke tests for the home page, registration, login/logout, subject/material reading, admin authorization, material CRUD, image-upload restrictions, and contact form. Use a test account and test content only.
+6. Confirm the new revision and database-backed flows on the actual production hostname. If anything fails, restore the previous application revision and database backup.
+
+**Do not import the schema into an existing production database blindly.** No production database changes are made by static checks. Never commit hosting passwords, database dumps, real users, password hashes, or contact messages.
+
 ## Security and limitations
 
 - SQL operations in the authentication/material flows use prepared statements in several places, but this does not mean the whole application is secure.
