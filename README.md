@@ -62,6 +62,27 @@ To stop services while preserving data, use `docker compose down`. Do not use `d
 The health endpoint reports only `ok` or `unavailable`; it never returns database hostnames, table names, or credentials.
 The cPanel bundle omits legacy `.html` duplicates because PHP is the actual LMS entry point; the bundled `.htaccess` also sets `DirectoryIndex index.php index.html` to prioritize the session-aware PHP home page.
 
+## Deploy to InfinityFree (free PHP + MySQL hosting)
+
+This repository now includes a guarded GitHub Actions FTPS deployment workflow for shared hosting. It deliberately does not upload database dumps, private configuration files, test scripts, Docker files or existing user uploads.
+
+1. Create a free hosting account at [InfinityFree](https://dash.infinityfree.com/register), create a hosting account/subdomain, and open its control panel. Use the free plan only; no paid upgrade is needed.
+2. In the control panel, create a MySQL database and open phpMyAdmin. Download or use the tracked `shadowsix.sql` file from the repository to import the schema. It creates only the `login`, `materi`, and `kontak` tables. It contains no users, password hashes, or contact messages.
+3. In the host's file manager, copy `config.local.example.php` to `config.local.php` in the site root (`htdocs/`). Fill in the exact MySQL hostname, full database username, password, and database name shown in the hosting control panel. Keep the populated `config.local.php` private; it is ignored by Git and blocked by `.htaccess`. Do not add the values to GitHub Actions logs or commit them.
+4. In GitHub, open **Settings → Secrets and variables → Actions** for this repository, then create these repository secrets from the hosting panel's FTP details:
+   - `FTP_SERVER`: FTP hostname only, without `ftp://` or a path.
+   - `FTP_USERNAME`: full FTP username.
+   - `FTP_PASSWORD`: FTP password.
+   - `FTP_SERVER_DIR`: exactly `htdocs/`.
+5. Open **Actions → Deploy ShadowSix to InfinityFree → Run workflow**. The first run defaults to a dry run, which only previews changes. Review it before running again with `dry_run=false` to publish the files. The workflow uses FTPS, fails closed if secrets are missing or the target directory differs from `htdocs/`, and never uses the destructive clean-slate option.
+6. Visit the new HTTPS subdomain and `/health.php`. A healthy database connection returns `{"status":"ok"}`; a configuration or database issue returns a generic unavailable response without exposing credentials.
+
+The schema intentionally does not create an administrator. Register your own account through the website, then use phpMyAdmin on your own database to grant that account the admin role:
+`UPDATE login SET role = 'admin' WHERE email = 'your-own-registered-email@example.test';`
+Replace the email with the address of the account you registered; do not use an account belonging to another person.
+
+The workflow excludes files inside `uploads/materi/` and `uploads/mapel/` from syncing so future deployments do not delete user-uploaded images. Do not turn on destructive clean-slate syncing, and keep a separate database export before any schema changes.
+
 ## Run locally with XAMPP
 
 1. Clone this repository into `xampp/htdocs/shadowsix-lms`.
