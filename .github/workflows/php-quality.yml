@@ -133,3 +133,38 @@ jobs:
               sys.exit(1)
           print("PASS: no obvious hard-coded database password assignments in PHP files.")
           PY
+
+      - name: Package cPanel deployment bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle="dist/shadowsix-cpanel-bundle"
+          mkdir -p "$bundle/public_html" "$bundle/database"
+
+          while IFS= read -r -d '' source; do
+            case "$source" in
+              .github/*|.git/*|tests/*|docker/*|scripts/*|Dockerfile|.dockerignore|docker-compose.yml|.env.example|.htaccess.example|README.md|DEPLOYMENT.md|.gitignore|*.sql|*.sql.gz|*.dump|*backup*|*.log)
+                continue
+                ;;
+            esac
+            destination="$bundle/public_html/$source"
+            mkdir -p "$(dirname "$destination")"
+            cp -- "$source" "$destination"
+          done < <(git ls-files -z)
+
+          cp shadowsix.sql "$bundle/database/shadowsix.sql"
+          (
+            cd dist
+            zip -qr shadowsix-cpanel-bundle.zip shadowsix-cpanel-bundle
+            sha256sum shadowsix-cpanel-bundle.zip > shadowsix-cpanel-bundle.sha256
+          )
+
+      - name: Upload cPanel deployment bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadowsix-cpanel-bundle
+          path: |
+            dist/shadowsix-cpanel-bundle.zip
+            dist/shadowsix-cpanel-bundle.sha256
+          if-no-files-found: error
+          retention-days: 14
