@@ -1,6 +1,7 @@
 # Safe, non-secret Apache rules shared by deployments.
 # Keep database passwords out of this file; configure secrets server-side.
 Options -Indexes
+DirectoryIndex index.php index.html
 
 <FilesMatch "(?i)^(?:\..*|README(?:\..*)?|shadowsix\.sql|.*\.(?:sql|md|log|ini|conf|bak|old|dist|example|ya?ml|lock))$">
     Require all denied
