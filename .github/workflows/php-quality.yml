@@ -143,7 +143,7 @@ jobs:
 
           while IFS= read -r -d '' source; do
             case "$source" in
-              .github/*|.git/*|tests/*|docker/*|scripts/*|Dockerfile|.dockerignore|docker-compose.yml|.env.example|.htaccess.example|README.md|DEPLOYMENT.md|.gitignore|*.sql|*.sql.gz|*.dump|*backup*|*.log)
+              .github/*|.git/*|tests/*|docker/*|scripts/*|Dockerfile|.dockerignore|docker-compose.yml|.env.example|.htaccess.example|README.md|DEPLOYMENT.md|.gitignore|*.html|*.sql|*.sql.gz|*.dump|*backup*|*.log)
                 continue
                 ;;
             esac
@@ -153,6 +153,17 @@ jobs:
           done < <(git ls-files -z)
 
           cp shadowsix.sql "$bundle/database/shadowsix.sql"
+
+          test -f "$bundle/public_html/index.php"
+          test ! -e "$bundle/public_html/index.html"
+          test -f "$bundle/public_html/.htaccess"
+          test -f "$bundle/public_html/uploads/.htaccess"
+          test -f "$bundle/database/shadowsix.sql"
+          if find "$bundle/public_html" -type f -name '*.html' -print -quit | grep -q .; then
+            echo "::error::Legacy non-PHP HTML pages must not be included in the cPanel bundle."
+            exit 1
+          fi
+
           (
             cd dist
             zip -qr shadowsix-cpanel-bundle.zip shadowsix-cpanel-bundle
