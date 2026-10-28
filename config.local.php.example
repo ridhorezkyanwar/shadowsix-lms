@@ -1,0 +1,18 @@
+<?php
+declare(strict_types=1);
+
+/*
+ * Shared-hosting template only.
+ * Copy this file to config.local.php on the hosting account, fill values from its
+ * MySQL database panel, and keep config.local.php out of Git.
+ * Do not upload this example as the active configuration.
+ */
+return [
+    'DB_HOST' => 'REPLACE_WITH_DATABASE_HOST',
+    'DB_USER' => 'REPLACE_WITH_DATABASE_USERNAME',
+    'DB_PASSWORD' => 'REPLACE_WITH_DATABASE_PASSWORD',
+    'DB_NAME' => 'REPLACE_WITH_DATABASE_NAME',
+    'DB_PORT' => '3306',
+    'DB_SSL' => '0',
+    'DB_SSL_CA' => '',
+];
