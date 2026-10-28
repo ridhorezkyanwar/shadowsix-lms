@@ -40,6 +40,27 @@ ShadowSix is a PHP and MySQL/MariaDB learning-management project built for a sch
 └── shadowsix.sql             # Schema only; no account or contact data
 ```
 
+## Run locally with Docker Compose (PHP + MariaDB)
+
+The repository includes a containerized PHP/Apache runtime and a persistent MariaDB service for reproducible testing.
+
+1. Install Docker Engine with the Compose plugin.
+2. Copy `.env.example` to `.env`.
+3. Replace both example passwords in `.env` with different random values. Do not commit the real `.env`.
+4. Start the application and database:
+
+   ```sh
+   docker compose up --build -d
+   ```
+
+5. Open `http://127.0.0.1:8080`. Check readiness with `docker compose ps` or `http://127.0.0.1:8080/health.php`.
+
+MariaDB imports `shadowsix.sql` when the database volume is first created. The `db_data` and `uploads_data` volumes preserve database rows and uploaded images across application rebuilds. The schema does not create an administrator account. After registering your own test account, grant admin role only in the database you control.
+
+To stop services while preserving data, use `docker compose down`. Do not use `docker compose down -v` unless permanent deletion of both named volumes is intended. Review [DEPLOYMENT.md](DEPLOYMENT.md) for backup, restore, and host requirements.
+
+The health endpoint reports only `ok` or `unavailable`; it never returns database hostnames, table names, or credentials.
+
 ## Run locally with XAMPP
 
 1. Clone this repository into `xampp/htdocs/shadowsix-lms`.
