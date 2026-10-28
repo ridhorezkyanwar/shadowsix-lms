@@ -35,12 +35,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          for name in FTP_USERNAME FTP_PASSWORD; do
-            if [[ -z "${!name}" ]]; then
-              echo "::error::Missing repository secret: HELIOHOST_${name#FTP_}"
-              exit 1
-            fi
-          done
+          if [[ -z "$FTP_USERNAME" ]]; then
+            echo "::error::Missing repository secret: HELIOHOST_FTP_USERNAME"
+            exit 1
+          fi
+          if [[ -z "$FTP_PASSWORD" ]]; then
+            echo "::error::Missing repository secret: HELIOHOST_FTP_PASSWORD"
+            exit 1
+          fi
 
           # This workflow targets the free HelioHost Johnny server only.
           # The path is fixed below so secrets cannot redirect uploads.
@@ -60,7 +62,7 @@ jobs:
           protocol: ftps
           port: 21
           security: strict
-          local-dir: ./ 
+          local-dir: ./
           server-dir: httpdocs/
           dry-run: ${{ inputs.dry_run }}
           dangerous-clean-slate: false
