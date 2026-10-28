@@ -13,12 +13,40 @@ permissions:
 jobs:
   php-quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: shadowsix_ci
+          MARIADB_USER: shadowsix_ci
+          MARIADB_PASSWORD: shadowsix_ci_password
+          MARIADB_ROOT_PASSWORD: shadowsix_ci_root_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=30
+    env:
+      DB_HOST: 127.0.0.1
+      DB_USER: shadowsix_ci
+      DB_PASSWORD: shadowsix_ci_password
+      DB_NAME: shadowsix_ci
+      DB_ROOT_PASSWORD: shadowsix_ci_root_password
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Set up PHP with required extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, fileinfo, dom
+          coverage: none
 
       - name: Verify PHP runtime
         run: |
@@ -28,7 +56,7 @@ jobs:
       - name: Lint every PHP file
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           find . -type f -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
 
       - name: Run security helper tests
@@ -37,10 +65,23 @@ jobs:
       - name: Run read-only schema preflight
         run: php scripts/db_preflight.php --schema-only
 
+      - name: Verify MariaDB schema and application CRUD
+        run: php tests/database_integration_test.php
+
+      - name: Validate container configuration
+        run: docker compose config --quiet
+
+      - name: Build production container
+        run: docker build --pull -t shadowsix-lms:ci .
+
       - name: Check for private database exports and hard-coded database passwords
         shell: bash
         run: |
-          test ! -e ridho10_shadowsix.sql || { echo "::error::Private database export is present in the repository."; exit 1; }
+          set -euo pipefail
+          if find . -type f \( -iname 'ridho10_shadowsix.sql' -o -iname '*backup*.sql' -o -iname '*dump*.sql' -o -iname '*.sql.gz' -o -iname '*.dump' \) -not -path './.git/*' -print -quit | grep -q .; then
+            echo "::error::A private database export or backup is present in the repository."
+            exit 1
+          fi
           python3 <<'PY'
           from pathlib import Path
           import re
