@@ -128,7 +128,13 @@ try {
     $statement = $db->prepare($query);
     $parameterTypes = str_repeat('s', count($requiredTableNames) + 1);
     $parameterValues = array_merge([$dbName], $requiredTableNames);
-    $statement->bind_param($parameterTypes, ...$parameterValues);
+    $boundParameters = [$parameterTypes];
+    foreach ($parameterValues as $index => $_) {
+        $boundParameters[] = &$parameterValues[$index];
+    }
+    if (!call_user_func_array([$statement, 'bind_param'], $boundParameters)) {
+        reportFailure('could not bind database metadata query parameters.', 2);
+    }
     $statement->execute();
     $result = $statement->get_result();
 
