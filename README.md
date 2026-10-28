@@ -89,6 +89,17 @@ The application reads `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` from th
 
 **Important:** any database credential previously committed to a public repository must be considered exposed. Rotate the old password in the hosting/database control panel, update the private environment configuration, and review access logs. Removing a file from the current branch does not erase earlier Git commits; history cleanup may be needed if a secret was committed.
 
+## Verified cPanel deployment bundle
+
+After the `PHP quality checks` workflow succeeds, it uploads a `shadowsix-cpanel-bundle` artifact for 14 days. Open [GitHub Actions](https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/php-quality.yml), select the successful run for the desired commit, and download that artifact. It contains:
+
+- `public_html/`: application PHP/CSS/images and Apache protection rules.
+- `database/shadowsix.sql`: schema-only SQL for importing into a database you created.
+
+Before deployment, back up the existing database and uploaded images. Import the schema only into a new/empty database; do not blindly import it over an existing database. Upload the contents of `public_html/` into the host document root, create the database and dedicated user in the host control panel, then configure private DB settings as the host supports. Never put actual database credentials in the ZIP, GitHub, or the tracked `.htaccess`.
+
+This verified artifact is a deployment package, not proof that a live host has been updated. The linked host must still be reachable and authenticated, the database must be configured, and the live routes must be smoke-tested before declaring production deployment complete.
+
 ## Continuous integration
 
 Every push and pull request should run a PHP syntax check across application PHP files and verify that the database schema contains the expected tables. Static checks do not connect to, mutate, or prove the health of a hosted database.
