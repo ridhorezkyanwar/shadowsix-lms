@@ -7,6 +7,16 @@ DirectoryIndex index.php index.html
     Require all denied
 </FilesMatch>
 
+<FilesMatch "(?i)^(databasecpnel|dbkontakcpnael|config_loader|config\.local|security)\.php$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(tests|scripts|docker)(/|$) - [F,L,NC]
+    RewriteRule ^uploads/(materi|mapel)/.*\.(php[0-9]?|phtml|phar|cgi|pl|py|sh)$ - [F,L,NC]
+</IfModule>
+
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "SAMEORIGIN"
