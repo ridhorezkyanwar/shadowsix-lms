@@ -34,4 +34,23 @@ test_expect(is_string($schema) && strpos($schema, '`role` varchar(20)') !== fals
 test_expect(is_string($schema) && stripos($schema, 'INSERT INTO `login`') === false, 'Schema must not seed user accounts or password hashes.');
 test_expect(is_string($schema) && stripos($schema, 'INSERT INTO `kontak`') === false, 'Schema must not seed contact messages.');
 
-echo "PASS: CSRF, safe HTML output, optional uploads, and schema privacy checks." . PHP_EOL;
+$requiredSchemaColumns = [
+    'login' => ['id', 'fullname', 'email', 'password', 'role', 'created_at'],
+    'materi' => ['id', 'nama_pelajaran', 'judul_materi', 'isi_materi', 'gambar_materi', 'gambar_mapel', 'nama_guru', 'created_at'],
+    'kontak' => ['id', 'nama', 'email', 'pesan', 'created_at'],
+];
+foreach ($requiredSchemaColumns as $tableName => $columnNames) {
+    test_expect(is_string($schema) && preg_match(
+        '/CREATE TABLE IF NOT EXISTS `' . preg_quote($tableName, '/') . '` \\((.*?)\\) ENGINE=/is',
+        $schema,
+        $tableMatch
+    ) === 1, 'Schema should declare the ' . $tableName . ' table.');
+    foreach ($columnNames as $columnName) {
+        test_expect(
+            preg_match('/^\\s*`' . preg_quote($columnName, '/') . '`/m', $tableMatch[1]) === 1,
+            'Schema should include the ' . $tableName . '.' . $columnName . ' column.'
+        );
+    }
+}
+
+echo "PASS: CSRF, safe HTML output, optional uploads, and schema/credential privacy checks." . PHP_EOL;
