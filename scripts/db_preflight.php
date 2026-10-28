@@ -93,19 +93,19 @@ if (in_array('--schema-only', $args, true)) {
     exit(0);
 }
 
-$dbHost = getenv('DB_HOST');
-$dbUser = getenv('DB_USER');
-$dbPassword = getenv('DB_PASSWORD');
-$dbName = getenv('DB_NAME');
-
-$dbHost = ($dbHost === false || trim($dbHost) === '') ? 'localhost' : $dbHost;
+require_once dirname(__DIR__) . '/config_loader.php';
+$dbConfig = shadowsix_database_config();
+$dbHost = $dbConfig['DB_HOST'];
+$dbUser = $dbConfig['DB_USER'];
+$dbPassword = $dbConfig['DB_PASSWORD'];
+$dbName = $dbConfig['DB_NAME'];
 
 if (
-    $dbUser === false || trim($dbUser) === '' ||
-    $dbPassword === false ||
-    $dbName === false || trim($dbName) === ''
+    !is_string($dbUser) || trim($dbUser) === '' ||
+    !is_string($dbPassword) ||
+    !is_string($dbName) || trim($dbName) === ''
 ) {
-    reportFailure('DB_USER, DB_PASSWORD and DB_NAME must be set in the server environment.', 2);
+    reportFailure('DB_USER, DB_PASSWORD and DB_NAME must be set in config.local.php or the server environment.', 2);
 }
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
