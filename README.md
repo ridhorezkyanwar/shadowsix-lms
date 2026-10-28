@@ -62,20 +62,20 @@ To stop services while preserving data, use `docker compose down`. Do not use `d
 The health endpoint reports only `ok` or `unavailable`; it never returns database hostnames, table names, or credentials.
 The cPanel bundle omits legacy `.html` duplicates because PHP is the actual LMS entry point; the bundled `.htaccess` also sets `DirectoryIndex index.php index.html` to prioritize the session-aware PHP home page.
 
-## Deploy to HelioHost (free PHP + MariaDB hosting)
+## Deploy to PHP.ID (free PHP + MySQL hosting)
 
-The repository includes a guarded GitHub Actions FTPS workflow for HelioHost's free Johnny hosting. HelioHost's published terms state that users must be at least 13; always register with accurate details and do not falsify age. Free-account availability can be limited by capacity, and the Johnny plan requires a control-panel login at least monthly.
+PHP.ID advertises free cPanel hosting with PHP and MySQL. Its terms require truthful personal details, verified email, one free hosting account per person and user-maintained backups. The service is not intended for large-scale CBT/online exams, so keep ShadowSix focused on learning materials rather than running mass online exams.
 
-1. Create an account at [HelioHost signup](https://heliohost.org/signup/) using your real information, then create a free Johnny hosting account and choose a domain/subdomain offered by Plesk.
-2. In Plesk, create a MariaDB database and database user. Import [`shadowsix.sql`](https://raw.githubusercontent.com/ridhorezkyanwar/shadowsix-lms/main/shadowsix.sql) into that database using phpMyAdmin. The SQL file is schema-only and does not include user accounts, password hashes, teaching materials, or contact messages.
-3. In Plesk File Manager, copy `config.local.example.php` to `httpdocs/config.local.php` and fill the database hostname, full database name, username, and password shown in Plesk. Keep the populated file on the server only; it is excluded from Git and from the deployment workflow.
-4. In GitHub, open **Settings → Secrets and variables → Actions**, then create the repository secrets `HELIOHOST_FTP_USERNAME` and `HELIOHOST_FTP_PASSWORD` with the system user's FTP username/password from Plesk.
-5. Open **Actions → Deploy ShadowSix to HelioHost → Run workflow**. The workflow targets the official Johnny server via strict FTPS and `httpdocs/`; it defaults to a dry run. Inspect the proposed changes before running again with `dry_run=false`.
-6. Open the exact domain assigned in Plesk, verify HTTPS, then visit `/health.php`. A healthy database returns `{"status":"ok"}`; errors return a generic unavailable response without exposing credentials.
+1. Register at [PHP.ID](https://www.php.id/register.html) using your real name, active Gmail/Yahoo email, and WhatsApp number for activation. Do not falsify identity details or create a duplicate free account.
+2. Create a MySQL database and database user in the hosting control panel. Import [`shadowsix.sql`](https://raw.githubusercontent.com/ridhorezkyanwar/shadowsix-lms/main/shadowsix.sql) using phpMyAdmin. This schema contains no user records, materials, contact messages, or passwords.
+3. In the control panel's file manager, create `public_html/config.local.php` from `config.local.example.php` and insert the exact DB hostname, full database name, username, and password. Keep the filled file private.
+4. In GitHub repository **Settings → Secrets and variables → Actions**, add `PHPID_FTP_SERVER`, `PHPID_FTP_USERNAME`, and `PHPID_FTP_PASSWORD` using the FTP details shown by the provider.
+5. Open **Actions → Deploy ShadowSix to PHP.ID cPanel → Run workflow**. First run with `dry_run=true`; inspect the preview, then use `dry_run=false` only after confirming the destination.
+6. Test the assigned HTTPS domain, `/health.php`, registration/login, materials, admin permission, image uploads, and the contact form.
 
-The workflow runs only when manually triggered, does not enable destructive clean-slate syncing, excludes database exports/private config/tests/Docker files, and preserves uploaded-image directories. Review [DEPLOYMENT.md](DEPLOYMENT.md) for the full steps and backup guidance.
+The FTPS workflow uses strict TLS, targets the standard cPanel `public_html/` directory, defaults to preview mode, never uses destructive clean-slate syncing, and excludes database dumps, private config, legacy HTML duplicates, and upload contents. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed steps and backups.
 
-**Existing data is not included.** The repository has a schema-only SQL file. If the old hosting account was deleted, existing user accounts, materials, contact messages, and uploaded images can be restored only from a backup you already have; the repo and deploy workflow cannot reconstruct lost records.
+**Important:** the old hosting database and uploaded images are not in this repository. If the old host was deleted, existing users/materials/contact messages/uploads can only be restored from a backup you already have.
 
 ## Run locally with XAMPP
 
