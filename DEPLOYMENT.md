@@ -2,50 +2,52 @@
 
 ShadowSix uses PHP + MySQL/MariaDB (MySQLi). It is not a static website.
 
-## Free public hosting: HelioHost (Johnny)
+## Free public hosting: PHP.ID
 
-This project is prepared for HelioHost's free PHP/MariaDB shared hosting. HelioHost's published Terms of Service state a minimum age of 13; use accurate account information and do not change your age to bypass another provider's rules. Free signups can be limited by server capacity, and the free Johnny service requires at least one login each month. Hosting is community-operated without a production SLA.
+PHP.ID advertises a free cPanel plan with PHP, MySQL, and free SSL. Its published signup form asks for a real full name, WhatsApp number for activation, a Gmail/Yahoo email, and a password. The hosting terms require genuine identity data and an active verified email, allow only one free hosting account per person, put backups on the user, and prohibit high-volume CBT/online-exam use. ShadowSix's current repository is a learning-material LMS; do not use this free host to run large-scale exams. The provider's public terms page does not state a minimum age, but register only with accurate details and comply with any additional verification requirements shown by the provider.
 
 Official provider pages:
-- [Sign up](https://heliohost.org/signup/)
-- [Terms of Service](https://heliohost.org/terms/)
-- [PHP / database features](https://wiki.helionet.org/What_HelioHost_Offers)
-- [File transfer and server details](https://wiki.helionet.org/Uploading_Files)
+- [Create a free account](https://www.php.id/register.html)
+- [Free hosting features](https://www.php.id/freehosting/)
+- [Hosting terms](https://www.php.id/syarat.html)
+- [Terms of Service](https://www.php.id/tos.html)
+- [Registration instructions](https://www.php.id/registrasi.html)
 
-### 1. Create the hosting account and database
+### 1. Create the account and database
 
-1. Create an account using your real details at [HelioHost signup](https://heliohost.org/signup/), then request the free **Johnny** hosting plan and choose a domain/subdomain offered by the control panel. Do not create duplicate accounts.
-2. After the hosting control panel is active, open Plesk and create a MariaDB database plus a database user with a strong, unique password.
-3. Import the schema-only file [`shadowsix.sql`](https://raw.githubusercontent.com/ridhorezkyanwar/shadowsix-lms/main/shadowsix.sql) in the database's phpMyAdmin. It creates `login`, `materi`, and `kontak`; it contains no real user accounts, password hashes, contact messages, or teaching-material records.
-4. In Plesk File Manager, create `httpdocs/config.local.php` from the repository's `config.local.example.php` template and replace every placeholder with the database hostname/name/username/password shown by Plesk. Keep this populated file on the server only: it is ignored by Git and explicitly excluded from deployments. Never paste its contents into chat, issues, logs, or the repository.
-5. Use the Plesk file manager to confirm `httpdocs/.htaccess` is present after the first deployment. It blocks web requests to database configuration helpers, local config files, SQL exports and deployment scripts.
+1. Open [PHP.ID registration](https://www.php.id/register.html). Enter your own real full name, WhatsApp number for the activation code, active Gmail/Yahoo email, and a strong unique password. Do not falsify identity details or create a duplicate free account.
+2. Verify the email/activation request and sign in to the hosting control panel.
+3. In cPanel, create a MySQL database and a database user. Grant that user privileges only on the database for ShadowSix. Record the exact database hostname, full database name, full database username, and password privately.
+4. Open phpMyAdmin and import [`shadowsix.sql`](https://raw.githubusercontent.com/ridhorezkyanwar/shadowsix-lms/main/shadowsix.sql). This is **schema-only**: it creates `login`, `materi`, and `kontak`, but includes no existing accounts, password hashes, material rows, contact messages or uploaded images.
+5. In the cPanel File Manager, create `public_html/config.local.php` by copying `config.local.example.php` and filling in the four database values. Keep the filled file on the server only; it is ignored by Git and excluded from deployment. Do not paste database credentials into chat, code, issues, or logs.
 
-### 2. Configure automatic FTPS deployment
+### 2. Configure safe automatic deployment
 
-The repository includes a guarded GitHub Actions workflow that uses HelioHost's documented FTPS endpoint on port 21. It targets only `johnny.heliohost.org` and `httpdocs/`; it will not send deployment credentials to an arbitrary host.
+The repository has a manual GitHub Actions workflow that uploads application files via FTPS using strict TLS. It uses the standard cPanel document root `public_html/`, never does a destructive clean-slate sync, and excludes the SQL schema, local config files, HTML duplicates, tests, scripts, container files and uploaded image contents.
 
-In GitHub, open **Settings → Secrets and variables → Actions → New repository secret** and add:
+In GitHub, open **Settings → Secrets and variables → Actions → New repository secret** and set:
 
-- `HELIOHOST_FTP_USERNAME`: the hosting system user's FTP username from Plesk.
-- `HELIOHOST_FTP_PASSWORD`: the corresponding FTP password.
+- `PHPID_FTP_SERVER`: the exact FTP/FTPS hostname shown in the PHP.ID/cPanel account. Enter only a hostname, not a URL or path.
+- `PHPID_FTP_USERNAME`: the FTP username shown in the hosting control panel.
+- `PHPID_FTP_PASSWORD`: the FTP password.
 
-Then open **Actions → Deploy ShadowSix to HelioHost → Run workflow**. First run with `dry_run=true`, review the changes, then run again with `dry_run=false` only when the target and uploaded file list are correct.
+Then open **Actions → Deploy ShadowSix to PHP.ID cPanel → Run workflow**. First run with `dry_run=true`, inspect the proposed changes, and only run a second time with `dry_run=false` after confirming the host and destination are correct. If the provider does not support strict FTPS on port 21 for your account, stop rather than switching to unencrypted FTP; check the exact connection instructions in its control panel.
 
-The workflow is intentionally guarded:
-- It only runs when manually triggered and defaults to a dry run.
-- It uses strict FTPS, does not clean the whole hosting directory, and targets the free Johnny host only.
-- It excludes local DB config, schema/export files, source-control metadata, tests, scripts, container files, documentation, and uploaded image contents.
-- It preserves `config.local.php` and `uploads/materi/` / `uploads/mapel/` content across normal deployments.
+The workflow cannot create the hosting account, database, private `config.local.php`, or GitHub secrets. These require access to your own hosting control panel.
 
-### 3. Verify the live app
+### 3. Verify the live deployment
 
-After the upload completes, use the exact domain assigned in Plesk; no live hostname is assumed before the account exists. Check:
-- Home page and subject pages load over HTTPS.
+After FTPS upload finishes, open the domain/subdomain assigned by PHP.ID over HTTPS and verify:
+
+- Home page and subject/material pages load.
 - `/health.php` returns only `{"status":"ok"}` when the database is reachable and a generic unavailable response otherwise.
-- Registration, login/logout, viewing materials, admin authorization, add/edit/delete materials, image uploads, and the contact form work with test data.
-- A new material survives a page reload and remains after a normal application redeploy.
+- Registration and login/logout work using a test account.
+- Admin authorization blocks ordinary users.
+- Add/edit/delete material and image uploads work using test content.
+- The contact form saves its test message.
+- A newly created test material survives page reload and a later non-destructive file deployment.
 
-The schema intentionally creates no administrator. Register your own test account, then in phpMyAdmin assign admin only to that account by running a statement such as `UPDATE login SET role = 'admin' WHERE email = 'your-own-registered-email@example.test';`. Replace the email placeholder with the account you registered yourself.
+The schema does not create an administrator account. Register your own test account first, then in phpMyAdmin grant the admin role only to that account using a statement such as `UPDATE login SET role = 'admin' WHERE email = 'your-own-registered-email@example.test';`. Replace the email placeholder with your own registered email.
 
 ## Local deployment with Docker Compose
 
@@ -62,11 +64,11 @@ Requirements: Docker Engine and the Docker Compose plugin.
 4. Open `http://127.0.0.1:8080`. MariaDB imports the schema into a new database volume on first initialization.
 5. Check status with `docker compose ps` or visit `http://127.0.0.1:8080/health.php`.
 
-Named volumes `db_data` and `uploads_data` preserve database rows and uploaded images across application rebuilds. Stop services while preserving data with `docker compose down`; do not add `-v` unless you deliberately want to delete both data volumes.
+Named volumes `db_data` and `uploads_data` preserve database rows and uploaded images across application rebuilds. Stop services while preserving data with `docker compose down`; do not add `-v` unless you deliberately want to permanently delete both data volumes.
 
 ## Backup and restore for local Docker
 
-Create a backup directory outside the repository, then export the database without printing its password:
+Create a backup folder outside the repository, then export the database without printing its password:
 
 ```sh
 mkdir -p ../shadowsix-backups
@@ -83,7 +85,8 @@ Never commit real accounts, password hashes, contact messages, uploaded files, p
 
 ## Data migration and production limits
 
-- The old hosting account is not connected to this deployment. The repository contains a **schema-only** SQL file, not a copy of the previous database. Existing accounts, materials, contact messages, and uploaded images can only be recovered from a backup you already have; this workflow cannot recreate lost data.
-- The free host is suitable for a student/portfolio project, not a guarantee of production-grade availability or compliance for sensitive student records. Keep independent backups, and test restore procedures.
-- Before using real student information, do a separate security review of rate limiting, session cookie flags, administrator provisioning, upload controls, backups, and remaining legacy PHP flows. The project has not had an independent security review.
-- Do not import the schema into a database with important records without backing it up and reviewing the SQL first. The schema uses `CREATE TABLE IF NOT EXISTS` but is not a migration for existing tables.
+- The repository contains a schema-only SQL file, not a backup of the previous hosting database. If the old hosting account was deleted, existing accounts, materials, contact messages and uploaded images can only be restored from a backup you already own; this workflow cannot recreate lost data.
+- PHP.ID says users are responsible for their own backups and can lose hosting data. Export periodic copies of the database and uploaded files to a location outside the provider.
+- Free shared hosting is suitable for a student/portfolio project, not a guarantee of production-grade availability or compliance for sensitive student data.
+- Before using real student information, review rate limiting, session cookie flags, admin provisioning, upload controls, backups and remaining legacy PHP flows. This project has not had an independent security review.
+- Do not import the schema into an existing database with important records without backing it up and reviewing the SQL first. The supplied schema uses `CREATE TABLE IF NOT EXISTS` but is not a migration for existing tables.
