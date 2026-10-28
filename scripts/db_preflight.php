@@ -95,26 +95,16 @@ if (in_array('--schema-only', $args, true)) {
 
 require_once dirname(__DIR__) . '/config_loader.php';
 $dbConfig = shadowsix_database_config();
-$dbHost = $dbConfig['DB_HOST'];
-$dbUser = $dbConfig['DB_USER'];
-$dbPassword = $dbConfig['DB_PASSWORD'];
-$dbName = $dbConfig['DB_NAME'];
+$dbName = $dbConfig['DB_NAME'] ?? null;
 
-if (
-    !is_string($dbUser) || trim($dbUser) === '' ||
-    !is_string($dbPassword) ||
-    !is_string($dbName) || trim($dbName) === ''
-) {
-    reportFailure('DB_USER, DB_PASSWORD and DB_NAME must be set in config.local.php or the server environment.', 2);
+if (!is_string($dbName) || trim($dbName) === '') {
+    reportFailure('DB_NAME must be set in config.local.php or the server environment.', 2);
 }
 
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-
 try {
-    $db = new mysqli($dbHost, $dbUser, $dbPassword, $dbName);
-    $db->set_charset('utf8mb4');
+    $db = shadowsix_open_database($dbConfig);
 } catch (Throwable $error) {
-    reportFailure('database connection failed. Verify private DB_* settings and host permissions.', 2);
+    reportFailure('database connection failed. Verify private DB_* settings, TLS and host permissions.', 2);
 }
 
 $requiredTableNames = array_keys($requiredColumns);
