@@ -1,0 +1,15 @@
+# Safe, non-secret Apache rules shared by deployments.
+# Keep database passwords out of this file; configure secrets server-side.
+Options -Indexes
+
+<FilesMatch "(?i)^(?:\..*|README(?:\..*)?|shadowsix\.sql|.*\.(?:sql|md|log|ini|conf|bak|old|dist|example|ya?ml|lock))$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    Header always set Content-Security-Policy "frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
+</IfModule>
