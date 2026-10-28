@@ -34,6 +34,9 @@ jobs:
       - name: Run security helper tests
         run: php tests/security_helpers_test.php
 
+      - name: Run read-only schema preflight
+        run: php scripts/db_preflight.php --schema-only
+
       - name: Check for private database exports and hard-coded database passwords
         shell: bash
         run: |
