@@ -60,6 +60,7 @@ MariaDB imports `shadowsix.sql` when the database volume is first created. The `
 To stop services while preserving data, use `docker compose down`. Do not use `docker compose down -v` unless permanent deletion of both named volumes is intended. Review [DEPLOYMENT.md](DEPLOYMENT.md) for backup, restore, and host requirements.
 
 The health endpoint reports only `ok` or `unavailable`; it never returns database hostnames, table names, or credentials.
+The cPanel bundle omits legacy `.html` duplicates because PHP is the actual LMS entry point; the bundled `.htaccess` also sets `DirectoryIndex index.php index.html` to prioritize the session-aware PHP home page.
 
 ## Run locally with XAMPP
 
