@@ -38,6 +38,7 @@ jobs:
           excluded_files = {
               ".gitignore", ".dockerignore", "Dockerfile", "docker-compose.yml",
               "README.md", "DEPLOYMENT.md", "INFINITYFREE_DEPLOYMENT.md",
+              ".htaccess.example", "config.local.example.php",
               "shadowsix.sql", "ridho10_shadowsix.sql",
           }
           excluded_suffixes = {".sql", ".md", ".yml", ".yaml", ".log", ".bak", ".old", ".dist", ".zip", ".dump", ".gz"}
