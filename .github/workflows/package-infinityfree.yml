@@ -1,0 +1,91 @@
+name: Package InfinityFree deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build deployment bundle without private or development files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import subprocess
+
+          root = Path(".").resolve()
+          dist = root / "dist"
+          dist.mkdir(exist_ok=True)
+
+          raw_paths = subprocess.check_output(["git", "ls-files", "-z"]).split(b"\0")
+          tracked = [Path(item.decode("utf-8")) for item in raw_paths if item]
+
+          excluded_dirs = {".git", ".github", "docker", "tests", "scripts", "node_modules", "vendor"}
+          excluded_files = {
+              ".gitignore", ".dockerignore", "Dockerfile", "docker-compose.yml",
+              "README.md", "DEPLOYMENT.md", "INFINITYFREE_DEPLOYMENT.md",
+              "shadowsix.sql", "ridho10_shadowsix.sql",
+          }
+          excluded_suffixes = {".sql", ".md", ".yml", ".yaml", ".log", ".bak", ".old", ".dist", ".zip", ".dump", ".gz"}
+
+          site_path = dist / "shadowsix-infinityfree-site.zip"
+          included = []
+          with ZipFile(site_path, "w", ZIP_DEFLATED, compresslevel=9) as archive:
+              for relative in tracked:
+                  parts = relative.parts
+                  if any(part in excluded_dirs for part in parts):
+                      continue
+                  if relative.name in excluded_files:
+                      continue
+                  if relative.name.startswith(".env"):
+                      continue
+                  if relative.suffix.lower() in excluded_suffixes:
+                      continue
+                  if len(parts) >= 3 and parts[0] == "uploads" and parts[1] in {"materi", "mapel"}:
+                      if relative.name != ".htaccess":
+                          continue
+                  source = root / relative
+                  if not source.is_file():
+                      continue
+                  archive.write(source, relative.as_posix())
+                  included.append(relative.as_posix())
+
+          required = {".htaccess", "index.php", "config_loader.php", "config.local.php.example", "uploads/.htaccess"}
+          missing = sorted(required - set(included))
+          if missing:
+              raise SystemExit("Missing required deployment files: " + ", ".join(missing))
+          if "shadowsix.sql" in included or any(name.endswith((".dump", ".sql.gz")) for name in included):
+              raise SystemExit("A database export was incorrectly added to the public site bundle.")
+
+          schema = root / "shadowsix.sql"
+          schema_text = schema.read_text(encoding="utf-8")
+          if "CREATE TABLE IF NOT EXISTS `login`" not in schema_text or "INSERT INTO `login`" in schema_text:
+              raise SystemExit("Schema safety check failed; expected schema-only SQL without account seed data.")
+          (dist / "shadowsix-schema.sql").write_text(schema_text, encoding="utf-8")
+          instructions = root / "INFINITYFREE_DEPLOYMENT.md"
+          (dist / "INFINITYFREE_DEPLOYMENT.md").write_text(instructions.read_text(encoding="utf-8"), encoding="utf-8")
+          print(f"PASS: packaged {len(included)} site files, schema kept separately.")
+          print("Site bundle bytes:", site_path.stat().st_size)
+          PY
+
+      - name: Upload deploy artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadowsix-infinityfree-release
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
