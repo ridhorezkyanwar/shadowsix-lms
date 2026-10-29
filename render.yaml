@@ -1,76 +1,35 @@
 services:
-  - type: pserv
-    name: shadowsix-db
-    runtime: docker
-    repo: https://github.com/render-examples/mysql.git
-    branch: main
-    plan: starter
-    region: singapore
-    autoDeploy: false
-    disk:
-      name: shadowsix-mysql-data
-      mountPath: /var/lib/mysql
-      sizeGB: 10
-    envVars:
-      - key: MYSQL_DATABASE
-        value: shadowsix
-      - key: MYSQL_USER
-        value: shadowsix_app
-      - key: MYSQL_PASSWORD
-        generateValue: true
-      - key: MYSQL_ROOT_PASSWORD
-        generateValue: true
-      - key: MYSQL_ROOT_HOST
-        value: "%"
-
   - type: web
     name: shadowsix-app
     runtime: docker
     repo: https://github.com/ridhorezkyanwar/shadowsix-lms.git
     branch: main
     dockerfilePath: ./Dockerfile
-    plan: starter
+    dockerContext: .
+    plan: free
     region: singapore
     autoDeploy: true
     healthCheckPath: /health.php
-    disk:
-      name: shadowsix-uploads
-      mountPath: /var/www/html/uploads
-      sizeGB: 1
     envVars:
       - key: DB_HOST
-        fromService:
-          name: shadowsix-db
-          type: pserv
-          property: host
+        sync: false
       - key: DB_PORT
-        fromService:
-          name: shadowsix-db
-          type: pserv
-          property: port
+        value: "26573"
       - key: DB_NAME
-        value: shadowsix
+        value: defaultdb
       - key: DB_USER
-        fromService:
-          name: shadowsix-db
-          type: pserv
-          envVarKey: MYSQL_USER
+        value: shadowsix_app
       - key: DB_PASSWORD
-        fromService:
-          name: shadowsix-db
-          type: pserv
-          envVarKey: MYSQL_PASSWORD
+        sync: false
+      - key: DB_SSL
+        value: "1"
+      - key: DB_SSL_CA
+        value: ""
       - key: DB_BOOTSTRAP_HOST
-        fromService:
-          name: shadowsix-db
-          type: pserv
-          property: host
+        sync: false
       - key: DB_BOOTSTRAP_USER
-        value: root
+        value: avnadmin
       - key: DB_BOOTSTRAP_PASSWORD
-        fromService:
-          name: shadowsix-db
-          type: pserv
-          envVarKey: MYSQL_ROOT_PASSWORD
+        sync: false
       - key: SHADOWSIX_AUTO_INIT_SCHEMA
         value: "1"
