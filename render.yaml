@@ -29,6 +29,12 @@ services:
         sync: false
       - key: DB_BOOTSTRAP_USER
         value: avnadmin
+      - key: DB_BOOTSTRAP_PORT
+        value: "26573"
+      - key: DB_BOOTSTRAP_SSL
+        value: "1"
+      - key: DB_BOOTSTRAP_SSL_CA
+        value: ""
       - key: DB_BOOTSTRAP_PASSWORD
         sync: false
       - key: SHADOWSIX_AUTO_INIT_SCHEMA
