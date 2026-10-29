@@ -26,6 +26,6 @@ chown www-data:www-data /var/www/html/uploads /var/www/html/uploads/materi /var/
 chmod 0750 /var/www/html/uploads /var/www/html/uploads/materi /var/www/html/uploads/mapel
 
 # Bootstrap-only database-admin credentials must not be inherited by Apache/PHP requests.
-unset DB_BOOTSTRAP_HOST DB_BOOTSTRAP_USER DB_BOOTSTRAP_PASSWORD SHADOWSIX_AUTO_INIT_SCHEMA
+unset DB_BOOTSTRAP_HOST DB_BOOTSTRAP_USER DB_BOOTSTRAP_PASSWORD DB_BOOTSTRAP_PORT DB_BOOTSTRAP_SSL DB_BOOTSTRAP_SSL_CA SHADOWSIX_AUTO_INIT_SCHEMA
 
 exec "$@"
