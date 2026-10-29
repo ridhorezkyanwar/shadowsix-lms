@@ -1,0 +1,76 @@
+services:
+  - type: pserv
+    name: shadowsix-db
+    runtime: docker
+    repo: https://github.com/render-examples/mysql.git
+    branch: main
+    plan: starter
+    region: singapore
+    autoDeploy: false
+    disk:
+      name: shadowsix-mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MYSQL_DATABASE
+        value: shadowsix
+      - key: MYSQL_USER
+        value: shadowsix_app
+      - key: MYSQL_PASSWORD
+        generateValue: true
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+      - key: MYSQL_ROOT_HOST
+        value: "%"
+
+  - type: web
+    name: shadowsix-app
+    runtime: docker
+    repo: https://github.com/ridhorezkyanwar/shadowsix-lms.git
+    branch: main
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: singapore
+    autoDeploy: true
+    healthCheckPath: /health.php
+    disk:
+      name: shadowsix-uploads
+      mountPath: /var/www/html/uploads
+      sizeGB: 1
+    envVars:
+      - key: DB_HOST
+        fromService:
+          name: shadowsix-db
+          type: pserv
+          property: host
+      - key: DB_PORT
+        fromService:
+          name: shadowsix-db
+          type: pserv
+          property: port
+      - key: DB_NAME
+        value: shadowsix
+      - key: DB_USER
+        fromService:
+          name: shadowsix-db
+          type: pserv
+          envVarKey: MYSQL_USER
+      - key: DB_PASSWORD
+        fromService:
+          name: shadowsix-db
+          type: pserv
+          envVarKey: MYSQL_PASSWORD
+      - key: DB_BOOTSTRAP_HOST
+        fromService:
+          name: shadowsix-db
+          type: pserv
+          property: host
+      - key: DB_BOOTSTRAP_USER
+        value: root
+      - key: DB_BOOTSTRAP_PASSWORD
+        fromService:
+          name: shadowsix-db
+          type: pserv
+          envVarKey: MYSQL_ROOT_PASSWORD
+      - key: SHADOWSIX_AUTO_INIT_SCHEMA
+        value: "1"
