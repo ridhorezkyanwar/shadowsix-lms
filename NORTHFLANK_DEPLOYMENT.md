@@ -26,6 +26,9 @@ Use these exact keys in the **runtime** environment variables/secret settings. U
 | `DB_SSL_CA` | Empty string, allowing the system CA bundle |
 | `DB_BOOTSTRAP_HOST` | Same Aiven host as `DB_HOST` |
 | `DB_BOOTSTRAP_USER` | `avnadmin` |
+| `DB_BOOTSTRAP_PORT` | `26573` |
+| `DB_BOOTSTRAP_SSL` | `1` |
+| `DB_BOOTSTRAP_SSL_CA` | Empty string, allowing the system CA bundle |
 | `DB_BOOTSTRAP_PASSWORD` | Admin password currently shown in Aiven |
 | `SHADOWSIX_AUTO_INIT_SCHEMA` | `1` during the first deployment to initialize a new empty database |
 
