@@ -1,40 +1,39 @@
-# ShadowSix on Render (full stack)
+# ShadowSix on Render (free web service + external MySQL)
 
-This repository now includes `render.yaml`, a Render Blueprint for the complete PHP + MySQL stack.
+This Blueprint describes one free Render web service built from the repository's Dockerfile. It connects to an existing external MySQL-compatible database; it does not create a Render database or persistent disk.
 
-## Resources created by the Blueprint
+## Current database
 
-- **`shadowsix-app`**: PHP 8.3 + Apache built from this repository's `Dockerfile`; public HTTPS web service; health check at `/health.php`.
-- **`shadowsix-db`**: private MySQL 8 service based on the official `render-examples/mysql` template. It is not exposed directly to the public internet.
-- **Database disk**: 10 GB at `/var/lib/mysql`, so database files survive service restarts and deployments.
-- **Uploads disk**: 1 GB at `/var/www/html/uploads`, so uploaded material/subject images survive app deployments.
-- **Database bootstrap**: the app's entrypoint runs the schema-only `shadowsix.sql` against a fresh database, creates a dedicated app user with CRUD permissions, and retries startup while MySQL becomes ready. Render generates the DB passwords; no credentials are stored in Git.
+Aiven MySQL was created separately and changed to the **Free-1-1gb** tier, which the console confirmed at **US$0/month**. Use the exact connection host and port shown in the Aiven console. Do not paste the password into GitHub.
 
-Both services use the Singapore region to keep the app and database together and close to Indonesian users.
+## Blueprint setup
 
-## Launch it
+1. Open the [Render Dashboard](https://dashboard.render.com/), choose **New → Blueprint**, and connect `ridhorezkyanwar/shadowsix-lms` on branch `main`.
+2. Review `render.yaml`. The app is configured for the free web plan in Singapore and `/health.php` as health check.
+3. Enter the requested environment values only in Render's private form:
+   - `DB_HOST`: Aiven MySQL hostname
+   - `DB_PORT`: Aiven MySQL port (pre-filled as `26573`)
+   - `DB_NAME`: `defaultdb`
+   - `DB_USER`: `shadowsix_app`
+   - `DB_PASSWORD`: a new strong random password for the application database user
+   - `DB_BOOTSTRAP_HOST`: same Aiven hostname
+   - `DB_BOOTSTRAP_USER`: `avnadmin`
+   - `DB_BOOTSTRAP_PASSWORD`: Aiven's current admin password
+4. Keep `DB_SSL=1`. The application verifies the database server certificate using the system CA bundle.
+5. Finish the Blueprint setup and wait for the deployment. The Docker entrypoint will run the schema bootstrap; the health endpoint should return `{"status":"ok"}` once the database is reachable.
+6. Verify registration/login and database-backed pages using test data.
 
-1. Open the [Render Dashboard](https://dashboard.render.com/).
-2. Choose **New → Blueprint** and connect the GitHub repository `ridhorezkyanwar/shadowsix-lms`, branch `main`.
-3. Review `render.yaml`: it creates two paid Starter compute services and two persistent disks. Apply it only after confirming the estimated charges in Render.
-4. Wait until `shadowsix-app` is deployed and `/health.php` returns `{"status":"ok"}`.
-5. Smoke-test the home page, registration/login, reading materials, admin authorization, material create/edit/delete, uploads, and the contact form using test data.
+## Important limitations and account blocker
 
-The repository update alone does not create Render resources. A first-time Blueprint must be created in the Render Dashboard. After the Blueprint is connected, application pushes to `main` can auto-deploy the app service; the MySQL service has auto-deploy disabled to avoid unnecessary database-image updates.
+- **No Render service has been created from this repo yet.** On October 29, 2026, the connected Render account returned HTTP 402 with the message that payment information is required to complete service creation. The Blueprint is committed as configuration, but deployment remains blocked until Render accepts the account's setup.
+- The free web service uses an ephemeral filesystem. Uploaded material/subject images may be lost when the service restarts, sleeps, or redeploys. Render's free plan does not support persistent disks.
+- The Aiven Free database has 1 GB storage and may power off when inactive. It is suitable for testing/learning, not a high-availability production system.
+- Never enter a payment method or select a paid plan unless you have independently decided to accept the charges.
+- `shadowsix.sql` is schema only; it does not migrate old user accounts, materials, contact messages or images.
+- This project has not undergone an independent security review. Use test data until the application is hardened and tested.
 
-## Estimated minimum recurring cost
+## Official documentation
 
-Using Render's currently published prices as of October 29, 2026:
-
-- App Starter compute: about **US$7/month**
-- MySQL Starter compute: about **US$7/month**
-- MySQL disk, 10 GB × US$0.25/GB-month: about **US$2.50/month**
-- Upload disk, 1 GB × US$0.25/GB-month: about **US$0.25/month**
-
-**Estimated total: US$16.75/month**, before bandwidth overages, taxes, or any other account-level charges. Check the current [Render pricing page](https://render.com/pricing) before applying the Blueprint. Persistent disks require a paid service plan; this design intentionally does not use ephemeral storage for database files or uploads.
-
-## Database/data migration notes
-
-`shadowsix.sql` is a **schema-only** file. The Blueprint initializes empty `login`, `materi`, and `kontak` tables; it does not recover existing user accounts, passwords, course materials, contact messages, or uploaded files from a former host. If existing data must be preserved, export it from the original host and plan a reviewed migration/restore before directing users to the new site. Do not import a schema over a non-empty database without a verified backup.
-
-This project is an educational/portfolio prototype and has not undergone an independent security review. Use test data until production hardening, backups, and application security testing are complete.
+- [Render free services and limitations](https://render.com/docs/free)
+- [Render first deployment](https://render.com/docs/your-first-deploy)
+- [Aiven MySQL console](https://console.aiven.io/)
