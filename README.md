@@ -21,6 +21,12 @@ ShadowSix is a PHP and MySQL/MariaDB learning-management project built for a sch
 - HTML and CSS
 - Apache, including XAMPP for local development
 
+## Recommended full-stack deployment: Render
+
+The repository includes a Render Blueprint in `render.yaml` for the PHP application, a private MySQL service, persistent database storage, persistent uploaded-image storage, and automatic schema bootstrap. Follow [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for first-time setup, health checks, costs, and the important note that the SQL file contains schema only—not existing production data.
+
+The Blueprint must be created once in the Render Dashboard; committing this file does not itself provision cloud resources. The configuration uses paid Starter services and persistent disks (estimated around US$16.75/month before extras).
+
 ## Project structure
 
 ```text
@@ -62,7 +68,7 @@ To stop services while preserving data, use `docker compose down`. Do not use `d
 The health endpoint reports only `ok` or `unavailable`; it never returns database hostnames, table names, or credentials.
 The cPanel bundle omits legacy `.html` duplicates because PHP is the actual LMS entry point; the bundled `.htaccess` also sets `DirectoryIndex index.php index.html` to prioritize the session-aware PHP home page.
 
-## Deploy to PHP.ID (free PHP + MySQL hosting)
+## Legacy hosting option: PHP.ID/cPanel (not used by the Render deployment)
 
 PHP.ID advertises free cPanel hosting with PHP and MySQL. Its terms require truthful personal details, verified email, one free hosting account per person and user-maintained backups. The service is not intended for large-scale CBT/online exams, so keep ShadowSix focused on learning materials rather than running mass online exams.
 
