@@ -1,92 +1,75 @@
 # ShadowSix deployment guide
 
-ShadowSix uses PHP + MySQL/MariaDB (MySQLi). It is not a static website.
+ShadowSix is a PHP 8.3 + Apache application using MySQLi. It is **not a static website**. Do not deploy it to PHP.ID; the repository's PHP.ID-specific workflow is being retired.
 
-## Free public hosting: PHP.ID
+## Current cloud resources
 
-PHP.ID advertises a free cPanel plan with PHP, MySQL, and free SSL. Its published signup form asks for a real full name, WhatsApp number for activation, a Gmail/Yahoo email, and a password. The hosting terms require genuine identity data and an active verified email, allow only one free hosting account per person, put backups on the user, and prohibit high-volume CBT/online-exam use. ShadowSix's current repository is a learning-material LMS; do not use this free host to run large-scale exams. The provider's public terms page does not state a minimum age, but register only with accurate details and comply with any additional verification requirements shown by the provider.
+- **MySQL:** Aiven MySQL service `mysql-1f1668d`, changed to **Free-1-1gb** and confirmed Running. The console showed US$0/month, 1 GB storage, and automatic power-off after inactivity.
+- **Application:** not yet live. Render service creation was blocked by that account requiring payment information. The preferred no-card route is Northflank Sandbox; follow [NORTHFLANK_DEPLOYMENT.md](NORTHFLANK_DEPLOYMENT.md) after connecting the account.
+- **Credentials:** use the hosting provider's environment variables/secrets page. Never commit actual database passwords, private configuration, user data, or database dumps.
 
-Official provider pages:
-- [Create a free account](https://www.php.id/register.html)
-- [Free hosting features](https://www.php.id/freehosting/)
-- [Hosting terms](https://www.php.id/syarat.html)
-- [Terms of Service](https://www.php.id/tos.html)
-- [Registration instructions](https://www.php.id/registrasi.html)
+## Northflank: Docker deployment
 
-### 1. Create the account and database
+Use the Northflank web dashboard. The app already includes a root-level Dockerfile, exposes port 80, and has `/health.php` for health checking.
 
-1. Open [PHP.ID registration](https://www.php.id/register.html). Enter your own real full name, WhatsApp number for the activation code, active Gmail/Yahoo email, and a strong unique password. Do not falsify identity details or create a duplicate free account.
-2. Verify the email/activation request and sign in to the hosting control panel.
-3. In cPanel, create a MySQL database and a database user. Grant that user privileges only on the database for ShadowSix. Record the exact database hostname, full database name, full database username, and password privately.
-4. Open phpMyAdmin and import [`shadowsix.sql`](https://raw.githubusercontent.com/ridhorezkyanwar/shadowsix-lms/main/shadowsix.sql). This is **schema-only**: it creates `login`, `materi`, and `kontak`, but includes no existing accounts, password hashes, material rows, contact messages or uploaded images.
-5. In the cPanel File Manager, create `public_html/config.local.php` by copying `config.local.example.php` and filling in the four database values. Keep the filled file on the server only; it is ignored by Git and excluded from deployment. Do not paste database credentials into chat, code, issues, or logs.
+1. Connect your GitHub account to Northflank and authorize the repository `ridhorezkyanwar/shadowsix-lms`.
+2. Create a project, then create a **Combined Service** from GitHub.
+3. Select repository `ridhorezkyanwar/shadowsix-lms`, branch `main`, Dockerfile build, Dockerfile path `/Dockerfile`, and Docker context `/` (repository root).
+4. Expose port `80` over HTTP and mark it **Public** to get an HTTPS endpoint.
+5. Set the environment variables from the table in [NORTHFLANK_DEPLOYMENT.md](NORTHFLANK_DEPLOYMENT.md), using a unique random application password. Do not paste secrets into GitHub, issues, logs, or chat.
+6. Set a health check path of `/health.php` if the service setup exposes that setting.
+7. Start the deployment and wait for the image build and runtime to complete. The startup script initializes a fresh schema when `SHADOWSIX_AUTO_INIT_SCHEMA=1`. Check logs if the app does not become healthy.
+8. Open the public endpoint and verify `/health.php`, home page, registration/login, materials, admin permission, create/edit/delete, uploads, and contact form with test data.
 
-### 2. Configure safe automatic deployment
+Northflank's Sandbox plan advertises no card requirement and up to US$20/month of resource usage. Confirm the actual resource/usage estimate in the dashboard before creating the service; the free sandbox has resource limits. See [Northflank pricing](https://northflank.com/pricing) and [Docker/Git deployment guide](https://www.northflank.ai/docs/v1/application/getting-started/build-and-deploy-your-code).
 
-The repository has a manual GitHub Actions workflow that uploads application files via FTPS using strict TLS. It uses the standard cPanel document root `public_html/`, never does a destructive clean-slate sync, and excludes the SQL schema, local config files, HTML duplicates, tests, scripts, container files and uploaded image contents.
+## Required environment variables
 
-In GitHub, open **Settings → Secrets and variables → Actions → New repository secret** and set:
+| Variable | Value |
+| --- | --- |
+| `DB_HOST` | Exact host from Aiven's connection details |
+| `DB_PORT` | `26573` |
+| `DB_NAME` | `defaultdb` |
+| `DB_USER` | `shadowsix_app` |
+| `DB_PASSWORD` | New strong random password for the app user |
+| `DB_SSL` | `1` |
+| `DB_SSL_CA` | Leave empty to use the container's system CA bundle |
+| `DB_BOOTSTRAP_HOST` | Same exact Aiven host as `DB_HOST` |
+| `DB_BOOTSTRAP_USER` | `avnadmin` |
+| `DB_BOOTSTRAP_PASSWORD` | Current Aiven admin password from Aiven console |
+| `SHADOWSIX_AUTO_INIT_SCHEMA` | `1` for first deployment so the startup script creates schema and grants the app account |
 
-- `PHPID_FTP_SERVER`: the exact FTP/FTPS hostname shown in the PHP.ID/cPanel account. Enter only a hostname, not a URL or path.
-- `PHPID_FTP_USERNAME`: the FTP username shown in the hosting control panel.
-- `PHPID_FTP_PASSWORD`: the FTP password.
+The bootstrap script is designed to be rerunnable and validates the required columns. If Aiven's admin account does not permit the user/grant operations, startup will fail safely; inspect provider logs and provision a least-privilege app user through the database provider console instead. Do not expose the admin password in logs or to the public.
 
-Then open **Actions → Deploy ShadowSix to PHP.ID cPanel → Run workflow**. First run with `dry_run=true`, inspect the proposed changes, and only run a second time with `dry_run=false` after confirming the host and destination are correct. If the provider does not support strict FTPS on port 21 for your account, stop rather than switching to unencrypted FTP; check the exact connection instructions in its control panel.
+## Free-tier behavior and uploads
 
-The workflow cannot create the hosting account, database, private `config.local.php`, or GitHub secrets. These require access to your own hosting control panel.
+The Aiven Free tier is 1 GB and may automatically power off when inactive. Northflank Sandbox has limited compute resources. Uploaded images are written to the app's local `uploads/` directory; unless a persistent volume or object store is configured, files may be lost on restart/redeploy. Do not rely on local uploads for important data until persistent storage is configured.
 
-### 3. Verify the live deployment
+The SQL file `shadowsix.sql` is **schema-only**. It does not restore previous accounts, materials, contact messages or uploaded files from any old host. Create test data only until a verified backup/migration exists.
 
-After FTPS upload finishes, open the domain/subdomain assigned by PHP.ID over HTTPS and verify:
+## Render fallback
 
-- Home page and subject/material pages load.
-- `/health.php` returns only `{"status":"ok"}` when the database is reachable and a generic unavailable response otherwise.
-- Registration and login/logout work using a test account.
-- Admin authorization blocks ordinary users.
-- Add/edit/delete material and image uploads work using test content.
-- The contact form saves its test message.
-- A newly created test material survives page reload and a later non-destructive file deployment.
+The repository also includes [`render.yaml`](render.yaml) for a free Render web service plus external MySQL. On October 29, 2026, service creation was rejected by the connected Render account with HTTP 402 because payment information was required. No Render service exists from this attempt. The [Render-specific guide](RENDER_DEPLOYMENT.md) documents that alternative.
 
-The schema does not create an administrator account. Register your own test account first, then in phpMyAdmin grant the admin role only to that account using a statement such as `UPDATE login SET role = 'admin' WHERE email = 'your-own-registered-email@example.test';`. Replace the email placeholder with your own registered email.
+## Local Docker Compose
 
-## Local deployment with Docker Compose
-
-Requirements: Docker Engine and the Docker Compose plugin.
+Requirements: Docker Engine and Docker Compose plugin.
 
 1. Copy `.env.example` to `.env`.
-2. Replace `DB_PASSWORD` and `DB_ROOT_PASSWORD` with different random values. Do not commit `.env`.
-3. Start the services:
+2. Replace `DB_PASSWORD` and `DB_ROOT_PASSWORD` with different random values. Never commit `.env`.
+3. Run:
 
    ```sh
    docker compose up --build -d
    ```
 
-4. Open `http://127.0.0.1:8080`. MariaDB imports the schema into a new database volume on first initialization.
-5. Check status with `docker compose ps` or visit `http://127.0.0.1:8080/health.php`.
+4. Open `http://127.0.0.1:8080`. MariaDB imports the schema into a new database volume on first startup.
+5. Check `docker compose ps` or `http://127.0.0.1:8080/health.php`.
 
-Named volumes `db_data` and `uploads_data` preserve database rows and uploaded images across application rebuilds. Stop services while preserving data with `docker compose down`; do not add `-v` unless you deliberately want to permanently delete both data volumes.
+Named volumes `db_data` and `uploads_data` preserve local data across container rebuilds. `docker compose down` preserves volumes; `docker compose down -v` permanently deletes them.
 
-## Backup and restore for local Docker
+## Safety and production readiness
 
-Create a backup folder outside the repository, then export the database without printing its password:
-
-```sh
-mkdir -p ../shadowsix-backups
-docker compose exec -T db sh -c 'mariadb-dump -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE"' > ../shadowsix-backups/shadowsix.sql
-```
-
-Restore only after verifying the target database and keeping an independent backup:
-
-```sh
-docker compose exec -T db sh -c 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE"' < ../shadowsix-backups/shadowsix.sql
-```
-
-Never commit real accounts, password hashes, contact messages, uploaded files, private database exports, or hosting credentials.
-
-## Data migration and production limits
-
-- The repository contains a schema-only SQL file, not a backup of the previous hosting database. If the old hosting account was deleted, existing accounts, materials, contact messages and uploaded images can only be restored from a backup you already own; this workflow cannot recreate lost data.
-- PHP.ID says users are responsible for their own backups and can lose hosting data. Export periodic copies of the database and uploaded files to a location outside the provider.
-- Free shared hosting is suitable for a student/portfolio project, not a guarantee of production-grade availability or compliance for sensitive student data.
-- Before using real student information, review rate limiting, session cookie flags, admin provisioning, upload controls, backups and remaining legacy PHP flows. This project has not had an independent security review.
-- Do not import the schema into an existing database with important records without backing it up and reviewing the SQL first. The supplied schema uses `CREATE TABLE IF NOT EXISTS` but is not a migration for existing tables.
+- The repository has not had an independent security review. Do not use real student records until access control, rate limiting, upload security, session settings, backups and application flows have been reviewed.
+- The schema does not create an administrator account. Register a test account and explicitly grant the admin role only to your own account in a database you control.
+- Take a verified backup before any schema operation on a database with valuable data. The schema is for a fresh database and is not a migration.
