@@ -25,7 +25,7 @@ mkdir -p /var/www/html/uploads/materi /var/www/html/uploads/mapel
 chown www-data:www-data /var/www/html/uploads /var/www/html/uploads/materi /var/www/html/uploads/mapel
 chmod 0750 /var/www/html/uploads /var/www/html/uploads/materi /var/www/html/uploads/mapel
 
-# The bootstrap-only root credentials must not be inherited by Apache/PHP requests.
+# Bootstrap-only database-admin credentials must not be inherited by Apache/PHP requests.
 unset DB_BOOTSTRAP_HOST DB_BOOTSTRAP_USER DB_BOOTSTRAP_PASSWORD SHADOWSIX_AUTO_INIT_SCHEMA
 
 exec "$@"
