@@ -36,10 +36,13 @@ Northflank's Sandbox plan advertises no card requirement and up to US$20/month o
 | `DB_SSL_CA` | Leave empty to use the container's system CA bundle |
 | `DB_BOOTSTRAP_HOST` | Same exact Aiven host as `DB_HOST` |
 | `DB_BOOTSTRAP_USER` | `avnadmin` |
+| `DB_BOOTSTRAP_PORT` | `26573` |
+| `DB_BOOTSTRAP_SSL` | `1` |
+| `DB_BOOTSTRAP_SSL_CA` | Empty string to use the system CA bundle |
 | `DB_BOOTSTRAP_PASSWORD` | Current Aiven admin password from Aiven console |
 | `SHADOWSIX_AUTO_INIT_SCHEMA` | `1` for first deployment so the startup script creates schema and grants the app account |
 
-The bootstrap script is designed to be rerunnable and validates the required columns. If Aiven's admin account does not permit the user/grant operations, startup will fail safely; inspect provider logs and provision a least-privilege app user through the database provider console instead. Do not expose the admin password in logs or to the public.
+The bootstrap script uses the separate bootstrap port and verified TLS settings, is designed to be rerunnable and validates the required columns. If Aiven's admin account does not permit the user/grant operations, startup will fail safely; inspect provider logs and provision a least-privilege app user through the database provider console instead. Do not expose the admin password in logs or to the public.
 
 ## Free-tier behavior and uploads
 
