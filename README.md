@@ -21,11 +21,17 @@ ShadowSix is a PHP and MySQL/MariaDB learning-management project built for a sch
 - HTML and CSS
 - Apache, including XAMPP for local development
 
-## Recommended full-stack deployment: Render
+## Current cloud deployment path
 
-The repository includes a Render Blueprint in `render.yaml` for the PHP application, a private MySQL service, persistent database storage, persistent uploaded-image storage, and automatic schema bootstrap. Follow [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for first-time setup, health checks, costs, and the important note that the SQL file contains schema only—not existing production data.
+The project is prepared for a Docker-based deployment using the repository's PHP 8.3 + Apache `Dockerfile` and an external MySQL-compatible database.
 
-The Blueprint must be created once in the Render Dashboard; committing this file does not itself provision cloud resources. The configuration uses paid Starter services and persistent disks (estimated around US$16.75/month before extras).
+- **Database:** Aiven MySQL Free tier (`Free-1-1gb`, currently reported as running at US$0/month). It has 1 GB storage and may power off after inactivity.
+- **Preferred no-card application host:** Northflank Sandbox. See [NORTHFLANK_DEPLOYMENT.md](NORTHFLANK_DEPLOYMENT.md) for the environment variables, port, health check, and first deployment steps.
+- **Render fallback:** `render.yaml` defines a free web service connected to an external database. The connected Render account refused service creation until payment information is added, so no Render service has been created. Do not add a card just to use this configuration unless you independently decide to.
+- **Important free-host limit:** uploaded images are stored on the app filesystem by default. On free/ephemeral containers, uploads may disappear after a restart or redeploy. Use a supported persistent volume/object store before relying on uploads long term.
+- **Data scope:** `shadowsix.sql` contains schema only. It does not restore old user accounts, materials, contact messages or uploaded files.
+
+The GitHub repository being updated does not by itself mean the app is live; verify the deployment URL and `/health.php` before sharing it.
 
 ## Project structure
 
@@ -68,20 +74,9 @@ To stop services while preserving data, use `docker compose down`. Do not use `d
 The health endpoint reports only `ok` or `unavailable`; it never returns database hostnames, table names, or credentials.
 The cPanel bundle omits legacy `.html` duplicates because PHP is the actual LMS entry point; the bundled `.htaccess` also sets `DirectoryIndex index.php index.html` to prioritize the session-aware PHP home page.
 
-## Legacy hosting option: PHP.ID/cPanel (not used by the Render deployment)
+## Hosting note
 
-PHP.ID advertises free cPanel hosting with PHP and MySQL. Its terms require truthful personal details, verified email, one free hosting account per person and user-maintained backups. The service is not intended for large-scale CBT/online exams, so keep ShadowSix focused on learning materials rather than running mass online exams.
-
-1. Register at [PHP.ID](https://www.php.id/register.html) using your real name, active Gmail/Yahoo email, and WhatsApp number for activation. Do not falsify identity details or create a duplicate free account.
-2. Create a MySQL database and database user in the hosting control panel. Import [`shadowsix.sql`](https://raw.githubusercontent.com/ridhorezkyanwar/shadowsix-lms/main/shadowsix.sql) using phpMyAdmin. This schema contains no user records, materials, contact messages, or passwords.
-3. In the control panel's file manager, create `public_html/config.local.php` from `config.local.example.php` and insert the exact DB hostname, full database name, username, and password. Keep the filled file private.
-4. In GitHub repository **Settings → Secrets and variables → Actions**, add `PHPID_FTP_SERVER`, `PHPID_FTP_USERNAME`, and `PHPID_FTP_PASSWORD` using the FTP details shown by the provider.
-5. Open **Actions → Deploy ShadowSix to PHP.ID cPanel → Run workflow**. First run with `dry_run=true`; inspect the preview, then use `dry_run=false` only after confirming the destination.
-6. Test the assigned HTTPS domain, `/health.php`, registration/login, materials, admin permission, image uploads, and the contact form.
-
-The FTPS workflow uses strict TLS, targets the standard cPanel `public_html/` directory, defaults to preview mode, never uses destructive clean-slate syncing, and excludes database dumps, private config, legacy HTML duplicates, and upload contents. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed steps and backups.
-
-**Important:** the old hosting database and uploaded images are not in this repository. If the old host was deleted, existing users/materials/contact messages/uploads can only be restored from a backup you already have.
+This project is not being deployed to PHP.ID. The previous PHP.ID-specific deployment workflow and instructions are being retired to avoid an accidental deployment to that provider. Keep production database credentials in the host's secret/environment settings, never in GitHub files or chat.
 
 ## Run locally with XAMPP
 
