@@ -23,16 +23,17 @@ ShadowSix is a PHP and MySQL/MariaDB learning-management project built for a sch
 
 ## Current cloud deployment path
 
-The project is prepared for a Docker-based deployment using the repository's PHP 8.3 + Apache `Dockerfile` and an external MySQL-compatible database.
+**Selected no-card route: InfinityFree free PHP + MySQL hosting.** The project already includes a shared-hosting deployment package workflow and supports a private `config.local.php` file for database settings, so it does not need a Docker runtime on this host.
 
-- **Application host status:** Northflank onboarding was completed with Google Sign-In and the Developer Sandbox / Free platform plan selected. The Northflank GitHub App installation is still pending approval for `ridhorezkyanwar/shadowsix-lms`. **No application service has been created or deployed, and there is no live public URL.** See [NORTHFLANK_DEPLOYMENT.md](NORTHFLANK_DEPLOYMENT.md) for the verified status and next steps.
-- **Northflank free-plan/card caveat:** Northflank's current [pricing page](https://northflank.com/pricing) labels Sandbox “No card needed” and advertises included free resources. Its [billing documentation](https://northflank.com/docs/v1/application/billing/pricing-on-northflank), however, says a payment method is required before creating resources. These official pages conflict, so the actual account dashboard prompt must resolve the question. Usage beyond Sandbox limits may be billed. Do not add payment details or select paid compute without explicit approval.
-- **Database:** Aiven MySQL Free tier (`Free-1-1gb`) was previously reported running at US$0/month, with 1 GB storage and possible power-off after inactivity. Verify the current service state and connection details in Aiven before deploying.
-- **Render fallback:** `render.yaml` defines a free web service connected to an external database. The connected Render account refused service creation until payment information is added, so no Render service has been created. Do not add a card just to use this configuration unless you independently decide to.
-- **Important free-host limit:** uploaded images are stored on the app filesystem by default. On free/ephemeral containers, uploads may disappear after a restart or redeploy. Use a supported persistent volume/object store before relying on uploads long term.
-- **Data scope:** `shadowsix.sql` contains schema only. It does not restore old user accounts, materials, contact messages or uploaded files.
+- **Free hosting:** [InfinityFree](https://www.infinityfree.com/) advertises free PHP + MySQL hosting, free subdomains and SSL, with no credit card required. Its homepage currently advertises PHP 8.4, MySQL 8.0 / MariaDB 11.4, and 5 GB disk; confirm the actual PHP version and database details in the created hosting account.
+- **Database:** Create a new MySQL database inside the InfinityFree hosting control panel and import the schema-only `shadowsix-schema.sql` package. **Do not point this site at the Aiven MySQL service**: InfinityFree's free hosting blocks outbound connections to remote MySQL ports. The Aiven service remains separate and is not connected to this website.
+- **Deployment package:** After a push to `main`, the GitHub Actions workflow named **Package InfinityFree deployment** builds the website ZIP and separate schema file. Download the artifact from [GitHub Actions](https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/package-infinityfree.yml).
+- **Private database settings:** Copy `config.local.php.example` to `config.local.php` on the hosting account and enter the database values from InfinityFree's control panel. The app's `config_loader.php` supports this file; root `.htaccess` blocks direct web access to it. Never commit the real config file.
+- **Important limits:** InfinityFree documents file-size restrictions (including 1 MB per PHP file, 10 MB for other files, and 20 MB PHP uploads) and free-hosting fair-use restrictions. Review the limits before uploading large media.
+- **Northflank:** not selected for the no-card route. The account dashboard explicitly requested a payment card before creating the service, so no ShadowSix service was created there.
+- **Data scope:** `shadowsix.sql` is schema-only. It does not restore old user accounts, materials, contact messages or uploaded files.
 
-The GitHub repository being updated does not by itself mean the app is live; verify the deployment URL and `/health.php` before sharing it.
+The repository being updated does not mean the app is live. A hosting account must be created, files uploaded, the database configured, and the public pages smoke-tested before a live URL is claimed.
 
 ## Project structure
 
