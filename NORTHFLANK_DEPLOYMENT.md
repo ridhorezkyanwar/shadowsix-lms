@@ -1,38 +1,46 @@
 # ShadowSix on Northflank + Aiven MySQL
 
-This is the no-card deployment path prepared for the PHP Docker application. Keep all passwords in Northflank's environment-variable/secret UI.
+This is the intended no-card deployment path for the PHP Docker application. Keep all passwords in Northflank's environment-variable/secret UI.
+
+## Verified status — October 30, 2026
+
+- Northflank onboarding was completed with Google Sign-In and the **Developer Sandbox / Free** platform plan.
+- **No ShadowSix application service has been created, built, or deployed yet. There is no live public URL.**
+- The deployment flow reached GitHub's **Northflank Cloud - Build & Run** app installation page. The pending step is to install it on the personal account `ridhorezkyanwar`, then grant access to **only** `ridhorezkyanwar/shadowsix-lms` if GitHub offers the selected-repositories option. Do not install it on the unrelated `opslogisticstest` organization or grant all-repository access unless separately intended.
+- After the GitHub app installation is approved, return to Northflank and select repository `ridhorezkyanwar/shadowsix-lms`, branch `main`, and the root `/Dockerfile`.
+- **Free-plan caution:** Northflank advertises up to US$20/month of included resource usage on Sandbox, but that does not make every compute choice free. The service-creation flow displayed a compute choice that was not confirmed to cost $0, and Northflank's billing documentation says a payment method may be required before creating resources. Do not continue with a paid compute plan or enter payment information just to finish this deployment. Verify the displayed service cost is $0 before creating it.
 
 ## 1. Connect the repository
 
 1. Open [Northflank](https://app.northflank.com/).
-2. Connect GitHub and authorize `ridhorezkyanwar/shadowsix-lms`.
+2. Connect GitHub and authorize `ridhorezkyanwar/shadowsix-lms` only.
 3. Create a project and a **Combined Service** using repository `ridhorezkyanwar/shadowsix-lms`, branch `main`.
 4. Choose Dockerfile build, root Dockerfile `/Dockerfile`, repository root as context.
 5. Expose container port `80` as a public HTTP port. Northflank should generate an HTTPS endpoint. Use the service networking section if port auto-detection does not create a public route.
-6. Choose the smallest available Sandbox resource allocation that supports the PHP/Apache container. The pricing page currently advertises a free Sandbox with no card and up to US$20/month resource usage; verify the actual usage shown before creating resources.
+6. Before creating the resource, confirm the compute plan and estimated price are explicitly **US$0**. The Sandbox platform plan has resource limits; do not select a paid compute plan.
 
 ## 2. Add the environment variables
 
-Use these exact keys in the **runtime** environment variables/secret settings. Use the host shown for Aiven service `mysql-1f1668d`; do not put passwords in GitHub.
+Use these exact keys in the **runtime** environment variables/secret settings. Before entering them, check Aiven's current connection details for the service `mysql-1f1668d`; use the actual hostname, port, database and credentials displayed there. Do not assume these example values are correct without comparing them to Aiven's console, and do not put passwords in GitHub.
 
 | Key | Value |
 | --- | --- |
-| `DB_HOST` | Aiven service hostname from the connection details |
-| `DB_PORT` | `26573` |
-| `DB_NAME` | `defaultdb` |
-| `DB_USER` | `shadowsix_app` |
-| `DB_PASSWORD` | Create a unique random password for the app DB user |
+| `DB_HOST` | Exact Aiven hostname from the connection details |
+| `DB_PORT` | Port shown in Aiven's connection details (previous setup notes listed `26573`; verify before use) |
+| `DB_NAME` | Database name shown in Aiven (previous setup notes listed `defaultdb`; verify before use) |
+| `DB_USER` | Application database user; create it with least-privilege permissions if it does not exist |
+| `DB_PASSWORD` | Strong, unique password for the app database user |
 | `DB_SSL` | `1` |
-| `DB_SSL_CA` | Empty string, allowing the system CA bundle |
-| `DB_BOOTSTRAP_HOST` | Same Aiven host as `DB_HOST` |
-| `DB_BOOTSTRAP_USER` | `avnadmin` |
-| `DB_BOOTSTRAP_PORT` | `26573` |
+| `DB_SSL_CA` | Empty only if the container's system CA bundle is appropriate for the Aiven connection |
+| `DB_BOOTSTRAP_HOST` | Same verified Aiven host as `DB_HOST` |
+| `DB_BOOTSTRAP_USER` | Aiven admin/user account permitted to create the app database user and grant permissions (previous notes listed `avnadmin`; verify this) |
+| `DB_BOOTSTRAP_PORT` | Same verified connection port as `DB_PORT` |
 | `DB_BOOTSTRAP_SSL` | `1` |
-| `DB_BOOTSTRAP_SSL_CA` | Empty string, allowing the system CA bundle |
-| `DB_BOOTSTRAP_PASSWORD` | Admin password currently shown in Aiven |
-| `SHADOWSIX_AUTO_INIT_SCHEMA` | `1` during the first deployment to initialize a new empty database |
+| `DB_BOOTSTRAP_SSL_CA` | Empty only if using the container's appropriate system CA bundle |
+| `DB_BOOTSTRAP_PASSWORD` | Private password for the bootstrap account from Aiven |
+| `SHADOWSIX_AUTO_INIT_SCHEMA` | `1` only for the first deployment to a new, empty database |
 
-The app password is written into MySQL by `scripts/bootstrap_railway.php`; set the same app password in `DB_PASSWORD`. Keep `DB_BOOTSTRAP_PASSWORD` separate and private. The bootstrap gives the app account CRUD permissions only on the configured database. The script was initially written for Railway MySQL; if Aiven rejects the user/grant operations, use Aiven's database/user controls to create `shadowsix_app` with required permissions and then set `SHADOWSIX_AUTO_INIT_SCHEMA=0`.
+The app password is written into MySQL by `scripts/bootstrap_railway.php`; set the same app password in `DB_PASSWORD`. Keep `DB_BOOTSTRAP_PASSWORD` separate and private. The bootstrap script was initially written for Railway MySQL. If Aiven rejects user/grant operations, use Aiven's database/user controls to create an application user with the required least-privilege permissions and then set `SHADOWSIX_AUTO_INIT_SCHEMA=0`. Do not run schema initialization against a database with valuable data without a verified backup.
 
 ## 3. Health check and first run
 
@@ -44,9 +52,9 @@ The app password is written into MySQL by `scripts/bootstrap_railway.php`; set t
 
 ## 4. Limitations
 
-- Aiven Free is 1 GB storage and may power off after inactivity; it is not a high-availability database.
+- Aiven Free is 1 GB storage and may power off after inactivity; it is not a high-availability database. Check its current status in Aiven before deploying.
 - The application stores uploaded images in the local `uploads/` directory. Without persistent storage/object storage, uploads can be lost on restart or redeploy.
 - The SQL file `shadowsix.sql` is schema only; it has no old account rows, materials, messages, or uploaded files.
-- Northflank Sandbox has resource ceilings; verify usage/limits in the dashboard. Do not add paid resources without reviewing the price.
+- Northflank Sandbox has resource ceilings; verify actual resource price and limits in the dashboard. Do not add paid resources or payment methods without explicit approval.
 
-Official documentation: [Northflank pricing](https://northflank.com/pricing), [Northflank Git/Docker deployment](https://www.northflank.ai/docs/v1/application/getting-started/build-and-deploy-your-code), [Aiven console](https://console.aiven.io/).
+Official documentation: [Northflank pricing](https://northflank.com/pricing), [Northflank pricing/billing docs](https://northflank.com/docs/v1/application/billing/pricing-on-northflank), [Northflank Git/Docker deployment](https://www.northflank.ai/docs/v1/application/getting-started/build-and-deploy-your-code), [Aiven console](https://console.aiven.io/).
