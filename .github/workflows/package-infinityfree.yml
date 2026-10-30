@@ -77,9 +77,21 @@ jobs:
           if "CREATE TABLE IF NOT EXISTS `login`" not in schema_text or "INSERT INTO `login`" in schema_text:
               raise SystemExit("Schema safety check failed; expected schema-only SQL without account seed data.")
           (dist / "shadowsix-schema.sql").write_text(schema_text, encoding="utf-8")
+
+          starter = root / "shadowsix-starter-materi.sql"
+          if not starter.is_file():
+              raise SystemExit("Starter learning-material SQL file is missing.")
+          starter_text = starter.read_text(encoding="utf-8")
+          starter_count = starter_text.count("INSERT INTO `materi`")
+          if starter_count != 13:
+              raise SystemExit(f"Expected 13 starter material inserts, found {starter_count}.")
+          if "INSERT INTO `login`" in starter_text or "UPDATE `login`" in starter_text or "DELETE FROM `login`" in starter_text:
+              raise SystemExit("Starter SQL must not modify account records or roles.")
+          (dist / "shadowsix-starter-materi.sql").write_text(starter_text, encoding="utf-8")
+
           instructions = root / "INFINITYFREE_DEPLOYMENT.md"
           (dist / "INFINITYFREE_DEPLOYMENT.md").write_text(instructions.read_text(encoding="utf-8"), encoding="utf-8")
-          print(f"PASS: packaged {len(included)} site files, schema kept separately.")
+          print(f"PASS: packaged {len(included)} site files, schema and 13 starter lessons separately.")
           print("Site bundle bytes:", site_path.stat().st_size)
           PY
 
