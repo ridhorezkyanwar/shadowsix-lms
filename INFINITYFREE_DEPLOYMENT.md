@@ -1,175 +1,104 @@
-# InfinityFree deployment guide (PHP + MySQL)
+# ShadowSix on InfinityFree (PHP + MySQL)
 
-This guide deploys the existing PHP/MySQL app to a new shared-hosting account. It does not migrate data from the deleted host and does not invent an admin account. The committed `shadowsix.sql` is schema-only.
+## Live deployment status — October 30, 2026
 
-## 1. Create a hosting account
+- **Public website:** [https://shadowsix.free.je/](https://shadowsix.free.je/)
+- **Hosting:** InfinityFree free shared PHP + MySQL hosting.
+- **Database:** MySQL created in the same InfinityFree hosting account.
+- **Private connection settings:** `config.local.php` on the server. It is intentionally not tracked by Git.
+- **Authentication:** the owner reports successful registration and login testing.
+- **Admin:** the owner reports that a separate administrator account can open `/dashboard_admin.php`.
+- **Starter content:** the owner imported the 13-subject `shadowsix-starter-materi.sql` package.
+- These status points are based on the owner's confirmation. They are not an independent uptime check or security audit.
 
-1. Open [InfinityFree signup](https://dash.infinityfree.com/register) and sign in or register using your own account.
-2. Create a new hosting account/site and choose an available free subdomain. Keep the account owner email under your control.
-3. Open its control panel. Confirm PHP 8.x and MySQL/MariaDB are available.
+## Release contents
 
-The app is not live until a hosting account has been created and the files below are uploaded to that account.
+The GitHub Actions workflow **Package InfinityFree deployment** creates an artifact named `shadowsix-infinityfree-release` containing:
 
-InfinityFree advertises free PHP + MySQL hosting, SSL and a free subdomain without a credit card. Its current homepage advertises PHP 8.4, MySQL 8.0 / MariaDB 11.4 and 5 GB disk; confirm the actual PHP version in your account's control panel. This is shared PHP hosting, not a Docker service.
-
-## 2. Create a clean database
-
-1. In the hosting control panel, open MySQL Databases and create a new database and database user if the panel offers separate creation steps.
-2. Record the exact database host, database name, username, and password displayed by the host. InfinityFree may prefix the database and username; copy the complete values instead of guessing them.
-3. Use this local InfinityFree database for the website. Do not use the separate Aiven MySQL server on this free hosting plan: InfinityFree blocks outbound connections to remote MySQL ports, so the PHP application cannot connect to Aiven over its MySQL port.
-3. Open phpMyAdmin for that database, select the newly created empty database, and import the separate `shadowsix-schema.sql` file from the deployment artifact.
-4. Confirm that the `login`, `materi`, and `kontak` tables exist.
-
-Do not import the schema into an existing database with valuable data. The schema does not include existing users, hashed passwords, contact messages, or material records.
-
-## 3. Upload the website
-
-1. Download the deployment artifact produced by the GitHub Actions workflow named **Package InfinityFree deployment**.
-2. Extract `shadowsix-infinityfree-site.zip` on your computer.
-3. Upload the ZIP to the hosting account and extract it into the website document root (usually `htdocs`), or upload the ZIP contents with the file manager/FTP client.
-4. Make sure `index.php`, `.htaccess`, `config_loader.php`, and the `uploads`, `img`, and subject folders sit directly in the document root—not inside an additional nested folder.
-5. The package excludes the schema dump, Docker files, CI workflows, tests, and database exports from the public web root. Keep the separate schema file outside the document root.
-
-## 4. Set private database configuration
-
-In the document root, copy `config.local.php.example` to `config.local.php` using the hosting file manager. Edit the new `config.local.php` and fill the values from step 2:
-
-- `DB_HOST`: the exact database host shown in the control panel.
-- `DB_USER`: full database username.
-- `DB_PASSWORD`: database password.
-- `DB_NAME`: full database name.
-- `DB_PORT`: normally `3306`.
-- `DB_SSL`: leave `0` unless the provider explicitly requires TLS.
-
-Never commit or share the real `config.local.php`. Root `.htaccess` blocks HTTP access to the configuration file, documentation, schema dumps, dotfiles, and internal tooling.
-
-## 5. Bootstrap and verify the administrator
-
-1. Open the new website URL over HTTPS.
-2. Register a normal account using your own test email.
-3. In phpMyAdmin, run the following only after replacing the email with the exact email of the account you just registered:
-
-   ```sql
-   UPDATE login SET role = 'admin' WHERE email = 'YOUR_OWN_REGISTERED_EMAIL';
-   ```
-
-4. Sign out and back in. Verify that only your intended account shows the admin dashboard.
-
-The project does not seed an administrator or default password intentionally. Do not use a public demo password.
-
-## 6. Smoke tests before calling it live
-
-- Home page loads over HTTPS without PHP warnings or database details in the response.
-- `/health.php` returns `{"status":"ok"}` when the database is reachable.
-- Registration, login, logout, subject pages, and material viewing work.
-- Admin create/edit/delete works with a test material.
-- Upload a harmless JPG/PNG/GIF test image; verify that executable/script files cannot run from `uploads`.
-- Contact form stores a test message.
-- Refresh/reopen the site and verify test records and uploaded images remain present.
-
-If any test fails, inspect host error logs and the database values configured in `config.local.php`; do not paste passwords into GitHub issues or chat.
-
-## Status and limitations
-
-This is a free shared-hosting deployment target for a school/portfolio project. Free hosting can impose resource, email, backup, and support limits. The current application is an educational project and has not had an independent security review; do not store sensitive student data or treat this as production-grade school infrastructure.
-
-The old hosting environment was removed, and no old database credentials or production records are available in this repository. A live site and database must be confirmed on the new hosting account after upload and the smoke tests above.
-
-
-## Important: do not upload the raw Git repository
-
-Do **not** use GitHub's ordinary **Code → Download ZIP** archive or upload a complete checked-out repository directly into `/htdocs`. That archive contains development-only content such as `.git`, `.github`, Docker files, scripts, tests, and internal documentation. It is not the shared-hosting release package.
-
-Use only the GitHub Actions artifact named `shadowsix-infinityfree-release` from the successful **Package InfinityFree deployment** workflow:
-[Open the workflow runs](https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/package-infinityfree.yml).
-
-The artifact contains:
-- `shadowsix-infinityfree-site.zip` — the selected PHP website files for `/htdocs`.
-- `shadowsix-schema.sql` — schema-only SQL to import through phpMyAdmin, kept outside the public web root.
+- `shadowsix-infinityfree-site.zip` — PHP website files for `/htdocs`.
+- `shadowsix-schema.sql` — schema-only file for a fresh database.
+- `shadowsix-starter-materi.sql` — 13 original starter lessons.
 - `INFINITYFREE_DEPLOYMENT.md` — this guide.
 
-If the raw repository has already been uploaded into `/htdocs`, download a backup first if there are any files you changed manually. Then remove the uploaded `.git` directory immediately because repository history should not be exposed from a public web root. Remove other development-only folders such as `.github`, `docker`, `scripts`, and `tests`, as well as root Docker and documentation files, before extracting the release ZIP directly into `/htdocs`. Do not remove application folders such as `img`, `kontak`, or the subject/material directories; these are included in the release ZIP.
+[Open the packaging workflow runs](https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/package-infinityfree.yml).
 
-The site ZIP intentionally does not contain the active `config.local.php`. Create it on the hosting account by copying `config.local.php.example` to `config.local.php` and entering the private MySQL values from the InfinityFree control panel.
+## Publishing a code update
 
+A push to GitHub does not upload files to InfinityFree automatically.
 
-## Troubleshooting: homepage opens but login/register do not work
+1. Push code changes to branch `main`.
+2. Wait for **Package InfinityFree deployment** to finish successfully.
+3. Download `shadowsix-infinityfree-release` from the successful run.
+4. Extract the artifact on your computer.
+5. Back up the current website files, MySQL database, and uploaded images.
+6. Upload and extract `shadowsix-infinityfree-site.zip` into `/htdocs`.
+7. Preserve the production `config.local.php`. Do not replace it with `config.local.php.example`.
+8. Do not import `shadowsix.sql` into the existing database during a routine code update; it is for a fresh database.
+9. Do not re-import starter content unless needed. Its SQL skips exact subject/title pairs already present, but a backup is still recommended before any SQL import.
+10. Test the homepage, login/logout, registration using a test account, admin dashboard, lesson pages, uploads, and contact form.
 
-The anonymous homepage can load after establishing a database connection without querying the `login` table. Therefore, a working homepage alone does **not** prove that the application schema was imported. Both `login.php` and `register.php` need the `login` table.
+**Do not upload the ordinary GitHub Code → Download ZIP archive or a raw working copy.** Those include development files. Do not expose `.git`, `.github`, `docker`, `scripts`, `tests`, Docker files, internal documentation, or SQL exports in the public web root.
 
-1. Open InfinityFree **MySQL Databases → phpMyAdmin** and select the exact database named in `config.local.php`.
-2. On the **Structure** tab, confirm that all three tables exist: `login`, `materi`, and `kontak`. If any are missing, import `shadowsix-schema.sql` from the release artifact into this selected database. Do not import it into a different database.
-3. Confirm `config.local.php` uses the full database name shown in the panel (including its account prefix), the exact MySQL hostname, exact username, and the current database password. The DB account used by the PHP website must have normal SELECT/INSERT/UPDATE/DELETE permissions on this database.
-4. For a new empty database, create a **new account using the Register page**. The schema-only SQL contains no user records, so credentials from an old hosting database do not exist here. There is no default admin account.
-5. Registration requires a valid email and a password of **at least 12 bytes** and no more than 72 bytes. Use a new test password of at least 12 characters using ordinary ASCII letters/numbers for the first test. If the email is already in this database, the page reports that it is already registered; use that account's existing password or another email.
-6. After successful registration, the app redirects to `login.php?registered=1`. Sign in using the same email and password just registered.
+## Database configuration
 
-### Interpret the message shown by the page
+The live website uses the MySQL database created in the same InfinityFree hosting account. The application reads settings from `config.local.php` through `config_loader.php`.
 
-- **“Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.”** Reload the form and submit again on the same HTTPS hostname. Make sure browser cookies are enabled; do not switch between `www` and non-`www` or between HTTP and HTTPS while submitting.
-- **“Isi nama dan email yang valid. Kata sandi harus 12–72 byte.”** Correct the registration fields, especially password length.
-- **“Pendaftaran tidak dapat diproses saat ini. Silakan coba lagi nanti.”** Check that the `login` table exists in the selected database and that the configured database user can insert into it. Check InfinityFree's PHP error log if the table and permissions are correct.
-- **“Login tidak dapat diproses saat ini. Silakan coba lagi nanti.”** Check that the `login` table exists and that the database user can SELECT from it. Make sure the account was registered in this same database.
-- **“Email atau Password salah.”** The account may not exist in this new database, or the email/password pair does not match. Register a fresh test account first if this is a new installation.
+The server-side file follows this format; replace the values only inside the hosting File Manager and never commit the real file:
 
-Do not expose raw SQL errors, database passwords or PHP configuration in a public diagnostic page. If the page displays a different message, record the exact message (without any password or private data) before making further changes.
+```php
+<?php
+declare(strict_types=1);
 
+return [
+    'DB_HOST' => 'HOST_FROM_INFINITYFREE_PANEL',
+    'DB_USER' => 'USERNAME_FROM_INFINITYFREE_PANEL',
+    'DB_PASSWORD' => 'PRIVATE_DATABASE_PASSWORD',
+    'DB_NAME' => 'FULL_DATABASE_NAME_FROM_PANEL',
+    'DB_PORT' => '3306',
+    'DB_SSL' => '0',
+    'DB_SSL_CA' => '',
+];
+```
 
-## First administrator and first learning materials
+The root `.htaccess` denies direct HTTP access to `config.local.php`. Do not create a public diagnostic page that prints configuration values.
 
-The schema-only import intentionally creates **no administrator account and no learning-material rows**. A clean database therefore shows no subject cards and every new registration receives the default `user` role.
+## Schema, starter content, and admin
 
-### Promote your own registered account to admin
+- `shadowsix.sql` creates the `login`, `materi`, and `kontak` tables on a new/empty database. It contains no real user or lesson records.
+- `shadowsix-starter-materi.sql` contains one original introductory lesson for each of the 13 homepage subjects. It changes only the `materi` table and skips matching subject/title pairs already present.
+- The administrator account is created by registering normally and then promoting only the owner's account in phpMyAdmin. There is no default admin password.
 
-1. Register your own account through `/register.php` and confirm it appears in the `login` table.
-2. In phpMyAdmin, select the same database and open the `login` table's **Browse** tab. Confirm the exact email address and role of your account.
-3. Open the database **SQL** tab and run this query after replacing the sample address with the exact email of your own account:
+To inspect the subjects already present, run this read-only SQL in phpMyAdmin:
 
-   ```sql
-   UPDATE login
-   SET role = 'admin'
-   WHERE email = 'YOUR_OWN_REGISTERED_EMAIL'
-   LIMIT 1;
-   ```
+```sql
+SELECT nama_pelajaran, COUNT(*) AS jumlah_materi
+FROM materi
+GROUP BY nama_pelajaran
+ORDER BY nama_pelajaran;
+```
 
-4. Run a read-only check:
+After changing an account role, log out and sign in again so the new role is loaded into the session. Do not promote every account.
 
-   ```sql
-   SELECT id, fullname, email, role
-   FROM login
-   WHERE email = 'YOUR_OWN_REGISTERED_EMAIL';
-   ```
+The 13 starter lessons are introductory content and should be reviewed and expanded to match the actual school curriculum. They are not a complete official syllabus or a restoration of old-host data.
 
-   Confirm the selected account shows `role = admin`. Do not update every row and do not promote accounts you do not own.
-5. Log out of ShadowSix completely, then sign in again. The role is copied into the PHP session at login, so an already-open session continues to have the old role until it is refreshed by logging in again.
-6. Open `/dashboard_admin.php`. It should show the admin dashboard and the `+ Tambah Materi` action.
+## Health check and backups
 
-### Populate all 13 subjects in one import
+- Public health endpoint: [https://shadowsix.free.je/health.php](https://shadowsix.free.je/health.php)
+- Expected healthy response: `{"status":"ok"}`.
+- Export the MySQL database regularly through phpMyAdmin and store the backup outside `/htdocs` and outside GitHub.
+- Back up `uploads/` separately.
+- Back up before schema/content imports or bulk SQL operations.
 
-The repository now includes `shadowsix-starter-materi.sql`, containing one original introductory lesson for each of the 13 homepage subjects. It inserts into the `materi` table only; it does not change user accounts, passwords, or roles. Each insert checks for the same subject/title pair first, so importing the file again skips those exact existing starter lessons.
+## Troubleshooting
 
-1. Open the GitHub Actions run for **Package InfinityFree deployment** and download the latest `shadowsix-infinityfree-release` artifact.
-2. Extract the artifact on your computer and locate `shadowsix-starter-materi.sql`.
-3. In phpMyAdmin, select the existing `if0_43308433_shadowsix` database (or the database configured for your site), open **Import**, choose `shadowsix-starter-materi.sql`, and click **Go**.
-4. After import, open the `materi` table and confirm that 13 starter rows have been added, unless some subject/title pairs already existed.
-5. Log in as admin and open the homepage. The 13 subject cards should now appear.
+- **Homepage works, but login/register does not:** check `config.local.php`, the `login` table, and database permissions. A working anonymous homepage does not prove all authentication queries work.
+- **Invalid form session:** reload the form on the same HTTPS hostname with browser cookies enabled.
+- **Registration rejected:** name and email must be valid; password length must be 12–72 bytes.
+- **Email already registered:** use that account's password or another email.
+- **Login says email/password is incorrect:** confirm the account exists in this database and use the password chosen at registration.
+- **Admin dashboard redirects to login:** check that only the intended account's `role` is `admin`, then log out and sign in again.
+- Never publish raw database errors, credentials, or PHP configuration values.
 
-These are original starter lessons, not a restored backup of previous hosting content or a complete official syllabus. Review and expand the material for the school's actual curriculum. You can add more content from `/dashboard_admin.php` using **+ Tambah Materi**.
+## Hosting limitations
 
-Use the subject names exactly as the existing homepage mapping expects:
-
-   - `Bahasa Indonesia`
-   - `Bahasa Inggris`
-   - `DK RPL`
-   - `Seni Rupa`
-   - `Coding & AI`
-   - `Sejarah`
-   - `PJOK`
-   - `BK`
-   - `Pendidikan Agama`
-   - `PPKN`
-   - `Matematika`
-   - `IPAS`
-   - `Informatika`
-
-The repository does not contain an old production data backup or lesson seed records to restore. Do not import invented or third-party copyrighted lesson content as though it were the original school material. Add content you own or are authorized to publish.
+InfinityFree is free shared hosting with provider-defined resource, upload, file-size, and fair-use limits. It is suitable for this educational project and light testing, not high-availability or sensitive production workloads. This project has not received an independent security audit.
