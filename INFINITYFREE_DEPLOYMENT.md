@@ -144,14 +144,19 @@ The schema-only import intentionally creates **no administrator account and no l
 5. Log out of ShadowSix completely, then sign in again. The role is copied into the PHP session at login, so an already-open session continues to have the old role until it is refreshed by logging in again.
 6. Open `/dashboard_admin.php`. It should show the admin dashboard and the `+ Tambah Materi` action.
 
-### Add subjects and lessons
+### Populate all 13 subjects in one import
 
-The homepage displays subject cards from distinct `nama_pelajaran` values in the `materi` table. Because the schema import contains no material rows, the subject list is empty until an administrator adds the first lesson.
+The repository now includes `shadowsix-starter-materi.sql`, containing one original introductory lesson for each of the 13 homepage subjects. It inserts into the `materi` table only; it does not change user accounts, passwords, or roles. Each insert checks for the same subject/title pair first, so importing the file again skips those exact existing starter lessons.
 
-1. Open `/dashboard_admin.php` and choose **+ Tambah Materi**.
-2. Fill in the subject name, title, material content, and optionally teacher/image fields.
-3. Save the material. Repeat for every subject that should appear on the homepage.
-4. Use the subject names exactly as the existing homepage mapping expects:
+1. Open the GitHub Actions run for **Package InfinityFree deployment** and download the latest `shadowsix-infinityfree-release` artifact.
+2. Extract the artifact on your computer and locate `shadowsix-starter-materi.sql`.
+3. In phpMyAdmin, select the existing `if0_43308433_shadowsix` database (or the database configured for your site), open **Import**, choose `shadowsix-starter-materi.sql`, and click **Go**.
+4. After import, open the `materi` table and confirm that 13 starter rows have been added, unless some subject/title pairs already existed.
+5. Log in as admin and open the homepage. The 13 subject cards should now appear.
+
+These are original starter lessons, not a restored backup of previous hosting content or a complete official syllabus. Review and expand the material for the school's actual curriculum. You can add more content from `/dashboard_admin.php` using **+ Tambah Materi**.
+
+Use the subject names exactly as the existing homepage mapping expects:
 
    - `Bahasa Indonesia`
    - `Bahasa Inggris`
