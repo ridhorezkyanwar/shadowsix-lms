@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="310" viewBox="0 0 1200 310" role="img" aria-labelledby="title desc">
+  <title id="title">ShadowSix LMS</title>
+  <desc id="desc">Animated navy and violet banner for the ShadowSix learning management project.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#101a35">
+        <animate attributeName="stop-color" values="#101a35;#172554;#201044;#101a35" dur="12s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="52%" stop-color="#312e81">
+        <animate attributeName="stop-color" values="#312e81;#4c1d95;#164e63;#312e81" dur="12s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" stop-color="#0f172a">
+        <animate attributeName="stop-color" values="#0f172a;#111827;#172554;#0f172a" dur="12s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="50%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#f0abfc"/>
+      <animate attributeName="x1" values="0%;100%;0%" dur="7s" repeatCount="indefinite"/>
+      <animate attributeName="x2" values="100%;0%;100%" dur="7s" repeatCount="indefinite"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse">
+      <path d="M42 0H0V42" fill="none" stroke="#c4b5fd" stroke-opacity=".08" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="310" rx="28" fill="url(#bg)"/>
+  <rect width="1200" height="310" rx="28" fill="url(#grid)"/>
+  <circle cx="1040" cy="74" r="110" fill="#8b5cf6" opacity=".15" filter="url(#glow)">
+    <animate attributeName="cx" values="1040;930;1040" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="74;180;74" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="170" cy="278" r="95" fill="#22d3ee" opacity=".11" filter="url(#glow)">
+    <animate attributeName="r" values="70;120;70" dur="8s" repeatCount="indefinite"/>
+  </circle>
+  <g fill="none" stroke="url(#accent)" stroke-width="2" opacity=".7">
+    <path d="M60 235 C250 120 355 300 530 190 S850 85 1140 190">
+      <animate attributeName="d" values="M60 235 C250 120 355 300 530 190 S850 85 1140 190;M60 190 C250 300 355 120 530 230 S850 250 1140 120;M60 235 C250 120 355 300 530 190 S850 85 1140 190" dur="14s" repeatCount="indefinite"/>
+    </path>
+    <path d="M70 250 C260 150 390 310 580 205 S900 110 1130 215" opacity=".35"/>
+  </g>
+  <g transform="translate(92 95)">
+    <rect x="0" y="-38" width="8" height="94" rx="4" fill="url(#accent)"/>
+    <text x="34" y="0" fill="#ffffff" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="62" font-weight="800" letter-spacing="1">ShadowSix</text>
+    <text x="38" y="45" fill="#cbd5e1" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="24" font-weight="500" letter-spacing="5">LEARNING MANAGEMENT SYSTEM</text>
+    <rect x="38" y="76" width="280" height="4" rx="2" fill="url(#accent)">
+      <animate attributeName="width" values="120;420;280" dur="5s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <g transform="translate(910 105)" opacity=".95">
+    <rect x="0" y="0" width="170" height="118" rx="18" fill="#0b1227" fill-opacity=".52" stroke="#a78bfa" stroke-opacity=".65"/>
+    <path d="M27 38h116M27 58h87M27 78h102" stroke="#c4b5fd" stroke-width="7" stroke-linecap="round" opacity=".7"/>
+    <circle cx="142" cy="26" r="7" fill="#67e8f9">
+      <animate attributeName="opacity" values="1;.2;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="27" cy="100" r="4" fill="#a78bfa"/>
+    <circle cx="42" cy="100" r="4" fill="#67e8f9"/>
+    <circle cx="57" cy="100" r="4" fill="#f0abfc"/>
+  </g>
+  <text x="94" y="277" fill="#94a3b8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" letter-spacing="2">LEARN  •  BUILD  •  GROW</text>
+</svg>
