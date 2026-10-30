@@ -4,12 +4,26 @@ ShadowSix is a PHP 8.3 + Apache application using MySQLi. It is **not a static w
 
 ## Current cloud resources and deployment status
 
-- **MySQL:** Aiven MySQL service `mysql-1f1668d` was previously reported as switched to **Free-1-1gb** and Running, with 1 GB storage and possible automatic power-off after inactivity. Verify its current status and connection settings in the Aiven console before using it.
-- **Application:** **not yet live**. No Northflank application service has been created and there is no public application URL. Render service creation was blocked by that account requiring payment information.
-- **Northflank setup:** onboarding completed with Google Sign-In, and the **Developer Sandbox / Free** platform plan was selected. The flow reached GitHub's Northflank Cloud - Build & Run app installation page, but the install authorization and repository selection are not yet complete. The intended repository is `ridhorezkyanwar/shadowsix-lms`, branch `main`.
-- **Next required step:** in GitHub, install the Northflank Cloud - Build & Run app on the personal `ridhorezkyanwar` account and grant it access to only `ridhorezkyanwar/shadowsix-lms` if GitHub offers selected-repository access. Do not install it on the unrelated `opslogisticstest` organization or grant access to all repositories unless separately intended.
-- **Free-plan/card status is inconsistent across official pages:** the [pricing page](https://northflank.com/pricing) currently advertises Sandbox as “No card needed”, with 2 free services, 2 free cron jobs, 1 free database and up to US$20/month of included resources. However, the [billing documentation](https://northflank.com/docs/v1/application/billing/pricing-on-northflank) says all users must add a payment method before creating resources. The account dashboard's actual prompt must resolve this discrepancy. Do not enter payment details without explicit approval. The service-creation flow previously opened with a compute choice that was not confirmed to be free; choose only a clearly included Sandbox resource and verify its estimate. Usage beyond included limits may be billed.
-- **Credentials:** use the hosting provider's environment variables/secrets page. Never commit actual database passwords, private configuration, user data, or database dumps.
+- **Selected application host:** InfinityFree free PHP + MySQL shared hosting. Its official site advertises PHP/MySQL, free SSL and free subdomains without a credit card. The new host account has **not** been created yet, and the website is not live.
+- **Deployment package:** The GitHub Actions workflow **Package InfinityFree deployment** generates a site ZIP plus a separate schema-only SQL file on pushes to `main`. Download the latest successful artifact from [GitHub Actions](https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/package-infinityfree.yml).
+- **Database:** Create a fresh MySQL database inside the InfinityFree account and import the artifact's `shadowsix-schema.sql`. Do not use the separate Aiven MySQL endpoint from this host: InfinityFree free hosting blocks outbound remote MySQL connections on the required database port. Aiven is not connected to the selected no-card path.
+- **Northflank:** paused. The team dashboard explicitly displayed “Payment method required” on service creation. The Sandbox plan and selected resource were not deployed; no Northflank service or URL exists. Do not add a card for this project.
+- **Render:** service creation was previously blocked with HTTP 402 requiring payment information. No Render service exists.
+- **Credentials:** keep database credentials in the hosting account's private `config.local.php`; never commit credentials, private configuration, user data or database dumps.
+
+## Primary route: InfinityFree (no-card shared PHP hosting)
+
+1. Register at [InfinityFree](https://www.infinityfree.com/) and create a free hosting account/site using an available subdomain. No card is advertised as required.
+2. In its control panel, create a new MySQL database. Record the exact hostname, full database name, username and password shown there.
+3. Wait for the **Package InfinityFree deployment** GitHub Actions workflow to complete successfully after the latest commit. Download the artifact `shadowsix-infinityfree-release`.
+4. Extract `shadowsix-infinityfree-site.zip` into the site's `htdocs` document root. Keep `shadowsix-schema.sql` outside the public web root.
+5. In phpMyAdmin, select the new empty database and import `shadowsix-schema.sql`. Verify tables `login`, `materi` and `kontak` exist.
+6. In `htdocs`, copy `config.local.php.example` to `config.local.php` and fill the values from the hosting control panel. The root `.htaccess` blocks direct HTTP access to the real config file. Do not upload secrets to GitHub.
+7. Open the assigned HTTPS URL and test `/health.php`, registration, login, material pages, admin permission, CRUD, image uploads and contact form with test data.
+8. Register your own test user and assign its admin role using the SQL step in [INFINITYFREE_DEPLOYMENT.md](INFINITYFREE_DEPLOYMENT.md). The schema intentionally contains no default admin account.
+
+**Compatibility notes:** InfinityFree shared hosting runs PHP and MySQL directly; it does not run this project's Dockerfile. Create and use the database on the same InfinityFree hosting account. Remote MySQL access from external tools/services is blocked on the free hosting plan. Environment variables are not available as a supported configuration mechanism on this free hosting; this project uses its private `config.local.php` instead. InfinityFree also has fixed upload/file-size and fair-use limits; see the hosting provider's current documentation before uploading large files.
+
 
 ## Northflank: Docker deployment
 
