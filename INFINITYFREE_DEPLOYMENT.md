@@ -10,10 +10,13 @@ This guide deploys the existing PHP/MySQL app to a new shared-hosting account. I
 
 The app is not live until a hosting account has been created and the files below are uploaded to that account.
 
+InfinityFree advertises free PHP + MySQL hosting, SSL and a free subdomain without a credit card. Its current homepage advertises PHP 8.4, MySQL 8.0 / MariaDB 11.4 and 5 GB disk; confirm the actual PHP version in your account's control panel. This is shared PHP hosting, not a Docker service.
+
 ## 2. Create a clean database
 
 1. In the hosting control panel, open MySQL Databases and create a new database and database user if the panel offers separate creation steps.
 2. Record the exact database host, database name, username, and password displayed by the host. InfinityFree may prefix the database and username; copy the complete values instead of guessing them.
+3. Use this local InfinityFree database for the website. Do not use the separate Aiven MySQL server on this free hosting plan: InfinityFree blocks outbound connections to remote MySQL ports, so the PHP application cannot connect to Aiven over its MySQL port.
 3. Open phpMyAdmin for that database, select the newly created empty database, and import the separate `shadowsix-schema.sql` file from the deployment artifact.
 4. Confirm that the `login`, `materi`, and `kontak` tables exist.
 
