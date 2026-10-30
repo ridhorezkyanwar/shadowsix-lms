@@ -1,147 +1,132 @@
 # ShadowSix LMS
 
-ShadowSix is a PHP and MySQL/MariaDB learning-management project built for a school competency assessment. It provides subject pages, chapter-based materials, user registration/login, an admin interface for managing materials, and a contact form.
+ShadowSix is a PHP + MySQL learning-management system for a school competency assessment. It provides subject pages, lesson materials, registration/login, an admin dashboard, material management, and a contact form.
 
-> **Project status:** educational project / portfolio prototype. It has not undergone an independent security review. Do not use it for sensitive student data or public production workloads without further hardening and testing.
+> **Project type:** educational/portfolio project. It has not received an independent security review. Do not store sensitive student records or use it as production-grade school infrastructure without further hardening, testing, and backups.
+
+## Live website
+
+**Published URL:** [https://shadowsix.free.je/](https://shadowsix.free.je/)
+
+**Hosting:** InfinityFree free PHP + MySQL shared hosting.
+
+**Status reported by the site owner — October 30, 2026:**
+- The homepage is published and opens at the URL above.
+- Registration and login were tested successfully.
+- The owner's separate administrator account can access `dashboard_admin.php`.
+- The owner imported the 13-subject starter-material SQL package into the InfinityFree database.
+- These are owner-confirmed results. The assistant could not independently retrieve the live website during the final documentation update, so no independent uptime or security-audit claim is made.
+
+The production database is the MySQL database created inside the same InfinityFree account. The application reads its connection settings from a private `config.local.php` file on the host. **That file must never be committed to GitHub.** The former Aiven MySQL service is not connected to this website.
 
 ## Features
 
-- Browse subject and chapter pages.
-- Register and sign in with password hashing.
-- Role check for the admin material-management area.
+- Browse 13 school subject areas and their lesson materials.
+- Register and sign in with hashed passwords.
+- Role-based access to the admin material-management area.
 - Create, edit, and delete material records.
 - Optional material and subject image uploads.
-- Contact form backed by the database.
+- Contact form backed by MySQL.
 - Responsive HTML/CSS interface.
 
 ## Technology
 
-- PHP (MySQLi)
-- MySQL or MariaDB
-- HTML and CSS
-- Apache, including XAMPP for local development
+- PHP 8.x with MySQLi
+- MySQL/MariaDB
+- Apache
+- HTML, CSS, and JavaScript
 
-## Current cloud deployment path
+## Initial subjects and starter lessons
 
-**Selected no-card route: InfinityFree free PHP + MySQL hosting.** The project already includes a shared-hosting deployment package workflow and supports a private `config.local.php` file for database settings, so it does not need a Docker runtime on this host.
+The first content import includes one original introductory lesson for each subject: Bahasa Indonesia, Bahasa Inggris, DK RPL, Seni Rupa, Coding & AI, Sejarah, PJOK, BK, Pendidikan Agama, PPKN, Matematika, IPAS, and Informatika.
 
-- **Free hosting:** [InfinityFree](https://www.infinityfree.com/) advertises free PHP + MySQL hosting, free subdomains and SSL, with no credit card required. Its homepage currently advertises PHP 8.4, MySQL 8.0 / MariaDB 11.4, and 5 GB disk; confirm the actual PHP version and database details in the created hosting account.
-- **Database:** Create a new MySQL database inside the InfinityFree hosting control panel and import the schema-only `shadowsix-schema.sql` package. **Do not point this site at the Aiven MySQL service**: InfinityFree's free hosting blocks outbound connections to remote MySQL ports. The Aiven service remains separate and is not connected to this website.
-- **Deployment package:** After a push to `main`, the GitHub Actions workflow named **Package InfinityFree deployment** builds the website ZIP and separate schema file. Download the artifact from [GitHub Actions](https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/package-infinityfree.yml).
-- **Private database settings:** Copy `config.local.php.example` to `config.local.php` on the hosting account and enter the database values from InfinityFree's control panel. The app's `config_loader.php` supports this file; root `.htaccess` blocks direct web access to it. Never commit the real config file.
-- **Important limits:** InfinityFree documents file-size restrictions (including 1 MB per PHP file, 10 MB for other files, and 20 MB PHP uploads) and free-hosting fair-use restrictions. Review the limits before uploading large media.
-- **Northflank:** not selected for the no-card route. The account dashboard explicitly requested a payment card before creating the service, so no ShadowSix service was created there.
-- **Data scope:** `shadowsix.sql` is schema-only. It does not restore old user accounts, materials, contact messages or uploaded files.
+- [Starter material SQL](shadowsix-starter-materi.sql)
+- [InfinityFree deployment and maintenance guide](INFINITYFREE_DEPLOYMENT.md)
 
-The repository being updated does not mean the app is live. A hosting account must be created, files uploaded, the database configured, and the public pages smoke-tested before a live URL is claimed.
+The starter material is a foundation, not a complete official syllabus or a restoration of previous-host content. Review and expand it for the school's curriculum. The starter SQL inserts only into `materi`, does not alter accounts or roles, and skips exact subject/title pairs already present.
+
+## Deployment and updates
+
+The active host is InfinityFree. This is **shared PHP hosting**, so it runs the PHP files directly and does not use the repository's Dockerfile.
+
+The GitHub Actions workflow **Package InfinityFree deployment** builds a release artifact containing:
+- `shadowsix-infinityfree-site.zip`: website files only.
+- `shadowsix-schema.sql`: schema for a fresh database.
+- `shadowsix-starter-materi.sql`: 13 original starter lessons.
+- `INFINITYFREE_DEPLOYMENT.md`: hosting instructions.
+
+[Open the packaging workflow runs](https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/package-infinityfree.yml).
+
+**GitHub pushes do not automatically upload files to InfinityFree.** To publish a code update, download the latest successful artifact and upload/extract the website ZIP to `/htdocs`, taking a backup first. Preserve the private `config.local.php`, database contents, and user-uploaded images. Never upload GitHub's raw repository ZIP or expose the `.git` folder in the web root.
+
+## Database and secret handling
+
+- `shadowsix.sql` is schema-only; it contains no user accounts, passwords, contact messages, or lesson rows.
+- `shadowsix-starter-materi.sql` contains 13 introductory lessons and no user credentials.
+- The live database connection is configured through private `config.local.php` on InfinityFree.
+- Never commit `config.local.php`, database passwords, exports, user records, password hashes, or contact messages.
+- Keep separate backups of the MySQL database and uploaded files.
 
 ## Project structure
 
 ```text
 .
-├── index.php                 # Home and subject overview
-├── login.php                 # Sign-in
-├── register.php              # Account registration
-├── databasecpnel.php         # Shared database connection
-├── dashboard_admin.php       # Admin material list
-├── tambah_materi.php         # Create a material
-├── edit_materi.php           # Update a material
-├── hapus_materi.php          # Delete a material
-├── view_materi.php           # Material details
-├── kontak/                   # Contact page and stylesheet
-├── materi-*/                 # Subject/chapter pages
-├── img/                      # Subject images
-└── shadowsix.sql             # Schema only; no account or contact data
+├── index.php                    # Home and subject overview
+├── login.php                    # Sign-in
+├── register.php                 # Account registration
+├── dashboard_admin.php          # Admin material list
+├── tambah_materi.php            # Create a material
+├── edit_materi.php              # Update a material
+├── hapus_materi.php             # Delete a material
+├── view_materi.php              # Material details
+├── databasecpnel.php            # Shared database connection
+├── config_loader.php            # Loads private DB settings
+├── config.local.php.example     # Safe shared-hosting template
+├── shadowsix.sql                # Schema only
+├── shadowsix-starter-materi.sql  # 13 starter lessons
+├── INFINITYFREE_DEPLOYMENT.md
+├── kontak/                      # Contact page and stylesheet
+├── materi-*/                    # Subject/chapter pages
+└── img/                         # Subject images
 ```
 
-## Run locally with Docker Compose (PHP + MariaDB)
+## Local development with Docker Compose
 
-The repository includes a containerized PHP/Apache runtime and a persistent MariaDB service for reproducible testing.
+The repository also includes a PHP/Apache Docker runtime and MariaDB for local development.
 
-1. Install Docker Engine with the Compose plugin.
+1. Install Docker Engine and the Compose plugin.
 2. Copy `.env.example` to `.env`.
-3. Replace both example passwords in `.env` with different random values. Do not commit the real `.env`.
-4. Start the application and database:
+3. Replace both example passwords in `.env` with different random values; do not commit `.env`.
+4. Run:
 
    ```sh
    docker compose up --build -d
    ```
 
-5. Open `http://127.0.0.1:8080`. Check readiness with `docker compose ps` or `http://127.0.0.1:8080/health.php`.
+5. Open `http://127.0.0.1:8080`. Check `docker compose ps` or `http://127.0.0.1:8080/health.php`.
 
-MariaDB imports `shadowsix.sql` when the database volume is first created. The `db_data` and `uploads_data` volumes preserve database rows and uploaded images across application rebuilds. The schema does not create an administrator account. After registering your own test account, grant admin role only in the database you control.
+MariaDB imports `shadowsix.sql` on first startup. The named `db_data` and `uploads_data` volumes preserve local records and uploaded images across rebuilds. The schema does not create an administrator account. For local testing, register your own account and assign the admin role only to that account in your development database.
 
-To stop services while preserving data, use `docker compose down`. Do not use `docker compose down -v` unless permanent deletion of both named volumes is intended. Review [DEPLOYMENT.md](DEPLOYMENT.md) for backup, restore, and host requirements.
+To stop services while preserving data, use `docker compose down`. Do not use `docker compose down -v` unless permanent deletion is intended.
 
-The health endpoint reports only `ok` or `unavailable`; it never returns database hostnames, table names, or credentials.
-The cPanel bundle omits legacy `.html` duplicates because PHP is the actual LMS entry point; the bundled `.htaccess` also sets `DirectoryIndex index.php index.html` to prioritize the session-aware PHP home page.
-
-## Hosting note
-
-This project is not being deployed to PHP.ID. The previous PHP.ID-specific deployment workflow and instructions are being retired to avoid an accidental deployment to that provider. Keep production database credentials in the host's secret/environment settings, never in GitHub files or chat.
-
-## Run locally with XAMPP
+## Local development with XAMPP
 
 1. Clone this repository into `xampp/htdocs/shadowsix-lms`.
 2. Start Apache and MySQL/MariaDB.
 3. Create an empty database named `shadowsix` in phpMyAdmin.
-4. Select that database and import `shadowsix.sql`. The file creates the three tables used by the application but deliberately contains no users, password hashes, or contact messages.
-5. Configure the database environment variables for Apache/PHP:
-   - `DB_HOST`: usually `localhost`
-   - `DB_USER`: your local database user
-   - `DB_PASSWORD`: that user's password (XAMPP installations may use an empty password locally)
-   - `DB_NAME`: `shadowsix`
+4. Import `shadowsix.sql`; optionally import `shadowsix-starter-materi.sql` to populate the 13 initial lessons.
+5. Configure local database settings using your development setup. Never copy production credentials into a local file or commit secrets.
 
-The tracked root `.htaccess` contains non-secret hardening rules and should not be overwritten. For local XAMPP, use the SetEnv snippet in `.htaccess.example` inside your local Apache VirtualHost configuration outside this repository; do not add database settings to the tracked file. On hosted environments, set `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` through the hosting provider's private environment settings. Confirm the host supports the chosen mechanism before deploying.
+## CI and release artifacts
 
-### Read-only database preflight
+GitHub Actions checks PHP syntax, schema and application behavior, runs the Docker/MariaDB smoke test, and packages the InfinityFree release. CI success verifies repository code and packaging only; it does not prove that the live hosting account, production database, or public website is healthy.
 
-Run `php scripts/db_preflight.php --schema-only` to check the committed schema without a server or database connection. On the PHP host (for example, through its CLI/terminal), run `php scripts/db_preflight.php` after setting the private `DB_*` variables. The live check reads only table metadata and makes no schema or record changes. It is CLI-only and does not print database credentials or raw connection errors. Do not expose the command via a web request or paste database passwords into GitHub.
+## Hosting history
 
-Optional contact-email settings are `CONTACT_EMAIL` (destination address) and `MAIL_FROM` (a sender address authorized by your host). Without both values, the form stores the message in the database but does not send an email. A successful `mail()` return means the mail server accepted the message for handling; it does not guarantee delivery.
+- **InfinityFree:** active shared PHP/MySQL host for the published site.
+- **Northflank:** not used; the account's service-creation form required payment-card verification.
+- **Render:** not used; the connected account's service-creation request returned HTTP 402 requiring payment information.
+- **Aiven:** not connected to the live InfinityFree website.
+- **PHP.ID:** not used.
 
-Open `http://localhost/shadowsix-lms/index.php`. Register a new account to test the student flow. The schema does not create a default administrator. To grant admin access on your own development database after registering, run a deliberate database operation such as `UPDATE login SET role = 'admin' WHERE email = 'your-own-address@example.test';` with your own registered email. Never put real account credentials or data in the repository.
-
-## Database configuration and secrets
-
-The application reads `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` from the server environment. It no longer contains deployment credentials. If configuration is missing, database-backed pages return a generic service-unavailable message instead of exposing connection details.
-
-**Important:** any database credential previously committed to a public repository must be considered exposed. Rotate the old password in the hosting/database control panel, update the private environment configuration, and review access logs. Removing a file from the current branch does not erase earlier Git commits; history cleanup may be needed if a secret was committed.
-
-## Verified cPanel deployment bundle
-
-After the `PHP quality checks` workflow succeeds, it uploads a `shadowsix-cpanel-bundle` artifact for 14 days. Open [GitHub Actions](https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/php-quality.yml), select the successful run for the desired commit, and download that artifact. It contains:
-
-- `public_html/`: application PHP/CSS/images and Apache protection rules.
-- `database/shadowsix.sql`: schema-only SQL for importing into a database you created.
-
-Before deployment, back up the existing database and uploaded images. Import the schema only into a new/empty database; do not blindly import it over an existing database. Upload the contents of `public_html/` into the host document root, create the database and dedicated user in the host control panel, then configure private DB settings as the host supports. Never put actual database credentials in the ZIP, GitHub, or the tracked `.htaccess`.
-
-This verified artifact is a deployment package, not proof that a live host has been updated. The linked host must still be reachable and authenticated, the database must be configured, and the live routes must be smoke-tested before declaring production deployment complete.
-
-## Continuous integration
-
-Every push and pull request should run a PHP syntax check across application PHP files and verify that the database schema contains the expected tables. Static checks do not connect to, mutate, or prove the health of a hosted database.
-
-## Production deployment checklist (cPanel / Apache + MySQL)
-
-The repository does not contain a deployment-provider API or production database credentials. Before changing a live site:
-
-1. Confirm the hosting account, document root, PHP version/extensions, and whether Git Version Control or another deployment mechanism is configured.
-2. Export a database backup from the hosting control panel/phpMyAdmin and verify that the backup file is readable. Back up uploaded files separately; they are not part of the SQL schema.
-3. Compare the live schema with `shadowsix.sql`. The file creates the three tables on a fresh database; it is not a data migration and does not update existing rows or provision an administrator.
-4. Deploy application files without overwriting private server configuration or user uploads. Configure `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` in the host's private environment settings.
-5. Run smoke tests for the home page, registration, login/logout, subject/material reading, admin authorization, material CRUD, image-upload restrictions, and contact form. Use a test account and test content only.
-6. Confirm the new revision and database-backed flows on the actual production hostname. If anything fails, restore the previous application revision and database backup.
-
-**Do not import the schema into an existing production database blindly.** No production database changes are made by static checks. Never commit hosting passwords, database dumps, real users, password hashes, or contact messages.
-
-## Security and limitations
-
-- SQL operations in the authentication/material flows use prepared statements in several places, but this does not mean the whole application is secure.
-- Admin create/edit/delete forms and logout use CSRF tokens; login rotates the session ID; uploaded raster images are checked by MIME type and image headers; and rich-text material is sanitized before rendering.
-- Before a production deployment, review rate limiting, secure cookie flags, admin provisioning, file-upload hosting rules, backups, and the application's remaining legacy PHP flows.
-- Do not place production data, account exports, contact messages, password hashes, credentials, or uploaded files in Git.
-- Use only test data in development.
-- The schema file is structure only; an administrator account is not pre-created.
-
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the current deployment summary and [INFINITYFREE_DEPLOYMENT.md](INFINITYFREE_DEPLOYMENT.md) for publishing and backup procedures.
