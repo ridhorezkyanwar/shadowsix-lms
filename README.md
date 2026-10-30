@@ -1,3 +1,29 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ridhorezkyanwar/shadowsix-lms/main/.github/shadowsix-banner.svg" alt="ShadowSix LMS animated banner" width="100%" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/php-ci.yml"><img src="https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/php-ci.yml/badge.svg?branch=main" alt="PHP CI" /></a>
+  <a href="https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/php-lint.yml"><img src="https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/php-lint.yml/badge.svg?branch=main" alt="PHP syntax checks" /></a>
+  <a href="https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/php-quality.yml"><img src="https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/php-quality.yml/badge.svg?branch=main" alt="PHP quality checks" /></a>
+  <a href="https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/package-infinityfree.yml"><img src="https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/package-infinityfree.yml/badge.svg?branch=main" alt="InfinityFree package" /></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/PHP-8.x-777BB4?logo=php&logoColor=white" alt="PHP 8.x" />
+  <img src="https://img.shields.io/badge/Database-MySQL%20%2F%20MariaDB-4479A1?logo=mysql&logoColor=white" alt="MySQL and MariaDB" />
+  <img src="https://img.shields.io/badge/Hosting-InfinityFree-5B46D0" alt="InfinityFree hosting" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-0E7490.svg" alt="MIT License" /></a>
+</p>
+
+<p align="center">
+  <a href="https://shadowsix.free.je/"><strong>Visit ShadowSix LMS</strong></a>
+  &nbsp; • &nbsp;
+  <a href="https://github.com/ridhorezkyanwar/shadowsix-lms/actions">Build history</a>
+  &nbsp; • &nbsp;
+  <a href="INFINITYFREE_DEPLOYMENT.md">Deployment guide</a>
+</p>
+
 # ShadowSix LMS
 
 ShadowSix is a PHP + MySQL learning-management system for a school competency assessment. It provides subject pages, lesson materials, registration/login, an admin dashboard, material management, and a contact form.
@@ -18,6 +44,10 @@ ShadowSix is a PHP + MySQL learning-management system for a school competency as
 - These are owner-confirmed results. The assistant could not independently retrieve the live website during the final documentation update, so no independent uptime or security-audit claim is made.
 
 The production database is the MySQL database created inside the same InfinityFree account. The application reads its connection settings from a private `config.local.php` file on the host. **That file must never be committed to GitHub.** The former Aiven MySQL service is not connected to this website.
+
+## License
+
+This project is released under the [MIT License](LICENSE). Review the license before reusing or redistributing the code.
 
 ## Features
 
@@ -84,6 +114,7 @@ The GitHub Actions workflow **Package InfinityFree deployment** builds a release
 ├── config.local.php.example     # Safe shared-hosting template
 ├── shadowsix.sql                # Schema only
 ├── shadowsix-starter-materi.sql  # 13 starter lessons
+├── LICENSE                      # MIT License
 ├── INFINITYFREE_DEPLOYMENT.md
 ├── kontak/                      # Contact page and stylesheet
 ├── materi-*/                    # Subject/chapter pages
