@@ -1,14 +1,14 @@
 # ShadowSix on Northflank + Aiven MySQL
 
-This guide describes the intended **Developer Sandbox / free allowance** deployment path for the PHP Docker application. Keep all passwords in Northflank's environment-variable/secret UI.
+This is a reference guide for a Docker deployment only. **It is not the selected no-card route for ShadowSix.** The Northflank dashboard for this account explicitly displayed “Payment method required” before service creation. No Northflank service was created. Do not add a card for this project; use [INFINITYFREE_DEPLOYMENT.md](INFINITYFREE_DEPLOYMENT.md) instead for the selected no-card PHP + MySQL path.
 
 ## Verified status — October 30, 2026
 
-- Northflank onboarding was completed with Google Sign-In and the **Developer Sandbox / Free** platform plan.
-- **No ShadowSix application service has been created, built, or deployed yet. There is no live public URL.**
-- The deployment flow reached GitHub's **Northflank Cloud - Build & Run** app installation page. The pending step is to install it on the personal account `ridhorezkyanwar`, then grant access to **only** `ridhorezkyanwar/shadowsix-lms` if GitHub offers the selected-repositories option. Do not install it on the unrelated `opslogisticstest` organization or grant all-repository access unless separately intended.
-- After the GitHub app installation is approved, return to Northflank and select repository `ridhorezkyanwar/shadowsix-lms`, branch `main`, and the root `/Dockerfile`.
-- **Free-plan/card information is inconsistent across official pages:** the [pricing page](https://northflank.com/pricing) currently labels Sandbox “No card needed” and advertises 2 free services, 2 free cron jobs, 1 free database, and up to US$20/month of included resources. However, the [billing documentation](https://northflank.com/docs/v1/application/billing/pricing-on-northflank) says all users must add a payment method before creating resources, regardless of plan. Treat the actual message shown in this account's dashboard as decisive. Do not enter payment details without the account owner's explicit approval. The service-creation flow previously opened with a compute choice that was not verified as free; choose only a clearly included Sandbox option and verify its estimate before creating the resource. Usage outside included limits may be billed.
+- Northflank onboarding was completed with Google Sign-In and the Developer Sandbox / Free platform plan.
+- GitHub integration was connected, and the dashboard showed `ridhorezkyanwar/shadowsix-lms` under Connected repositories.
+- When opening service creation, the dashboard explicitly displayed **“Payment method required”** and requested a card before creating the service. The message said the service itself would not be charged, but card verification was still required.
+- The user requires a free route and does not want to add payment details. Therefore **Northflank deployment is paused; no service, build, deployment, or public URL was created**.
+- Recommended no-card route: [InfinityFree free PHP + MySQL](https://www.infinityfree.com/), documented in [INFINITYFREE_DEPLOYMENT.md](INFINITYFREE_DEPLOYMENT.md). This app can run there without Docker, using the deployment ZIP and private `config.local.php`.
 
 ## 1. Connect the repository
 
