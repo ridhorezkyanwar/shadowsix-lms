@@ -1,6 +1,6 @@
 # ShadowSix on Northflank + Aiven MySQL
 
-This is the intended no-card deployment path for the PHP Docker application. Keep all passwords in Northflank's environment-variable/secret UI.
+This guide describes the intended **Developer Sandbox / free allowance** deployment path for the PHP Docker application. Keep all passwords in Northflank's environment-variable/secret UI.
 
 ## Verified status — October 30, 2026
 
@@ -8,7 +8,7 @@ This is the intended no-card deployment path for the PHP Docker application. Kee
 - **No ShadowSix application service has been created, built, or deployed yet. There is no live public URL.**
 - The deployment flow reached GitHub's **Northflank Cloud - Build & Run** app installation page. The pending step is to install it on the personal account `ridhorezkyanwar`, then grant access to **only** `ridhorezkyanwar/shadowsix-lms` if GitHub offers the selected-repositories option. Do not install it on the unrelated `opslogisticstest` organization or grant all-repository access unless separately intended.
 - After the GitHub app installation is approved, return to Northflank and select repository `ridhorezkyanwar/shadowsix-lms`, branch `main`, and the root `/Dockerfile`.
-- **Free-plan caution:** Northflank advertises up to US$20/month of included resource usage on Sandbox, but that does not make every compute choice free. The service-creation flow displayed a compute choice that was not confirmed to cost $0, and Northflank's billing documentation says a payment method may be required before creating resources. Do not continue with a paid compute plan or enter payment information just to finish this deployment. Verify the displayed service cost is $0 before creating it.
+- **Free-plan and payment-method requirement:** Northflank's official pricing page advertises Sandbox as Free, with up to US$20/month of included Northflank Cloud resource usage and up to 2 services, 2 jobs, and 1 database. However, its official billing documentation says **all users must add a payment method before creating resources, regardless of plan**. This means the Free plan is not a no-card signup. Resource usage above the included allowance can be billed. The service-creation flow displayed a compute choice that was not confirmed to cost $0. Do not choose paid compute or add a payment method without the account owner's explicit approval. Verify the exact usage estimate and keep it within the free allowance. See [official pricing](https://northflank.com/pricing) and [billing requirements](https://northflank.com/docs/v1/application/billing/pricing-on-northflank).
 
 ## 1. Connect the repository
 
@@ -55,6 +55,6 @@ The app password is written into MySQL by `scripts/bootstrap_railway.php`; set t
 - Aiven Free is 1 GB storage and may power off after inactivity; it is not a high-availability database. Check its current status in Aiven before deploying.
 - The application stores uploaded images in the local `uploads/` directory. Without persistent storage/object storage, uploads can be lost on restart or redeploy.
 - The SQL file `shadowsix.sql` is schema only; it has no old account rows, materials, messages, or uploaded files.
-- Northflank Sandbox has resource ceilings; verify actual resource price and limits in the dashboard. Do not add paid resources or payment methods without explicit approval.
+- Northflank Sandbox currently advertises up to US$20/month of included resource usage, with plan limits. Northflank requires a payment method before creating resources; resource usage beyond the allowance can be billed. Do not add a payment method or paid resources without explicit approval.
 
 Official documentation: [Northflank pricing](https://northflank.com/pricing), [Northflank pricing/billing docs](https://northflank.com/docs/v1/application/billing/pricing-on-northflank), [Northflank Git/Docker deployment](https://www.northflank.ai/docs/v1/application/getting-started/build-and-deploy-your-code), [Aiven console](https://console.aiven.io/).
