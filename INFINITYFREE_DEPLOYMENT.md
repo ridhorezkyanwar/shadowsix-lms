@@ -113,3 +113,58 @@ The anonymous homepage can load after establishing a database connection without
 - **“Email atau Password salah.”** The account may not exist in this new database, or the email/password pair does not match. Register a fresh test account first if this is a new installation.
 
 Do not expose raw SQL errors, database passwords or PHP configuration in a public diagnostic page. If the page displays a different message, record the exact message (without any password or private data) before making further changes.
+
+
+## First administrator and first learning materials
+
+The schema-only import intentionally creates **no administrator account and no learning-material rows**. A clean database therefore shows no subject cards and every new registration receives the default `user` role.
+
+### Promote your own registered account to admin
+
+1. Register your own account through `/register.php` and confirm it appears in the `login` table.
+2. In phpMyAdmin, select the same database and open the `login` table's **Browse** tab. Confirm the exact email address and role of your account.
+3. Open the database **SQL** tab and run this query after replacing the sample address with the exact email of your own account:
+
+   ```sql
+   UPDATE login
+   SET role = 'admin'
+   WHERE email = 'YOUR_OWN_REGISTERED_EMAIL'
+   LIMIT 1;
+   ```
+
+4. Run a read-only check:
+
+   ```sql
+   SELECT id, fullname, email, role
+   FROM login
+   WHERE email = 'YOUR_OWN_REGISTERED_EMAIL';
+   ```
+
+   Confirm the selected account shows `role = admin`. Do not update every row and do not promote accounts you do not own.
+5. Log out of ShadowSix completely, then sign in again. The role is copied into the PHP session at login, so an already-open session continues to have the old role until it is refreshed by logging in again.
+6. Open `/dashboard_admin.php`. It should show the admin dashboard and the `+ Tambah Materi` action.
+
+### Add subjects and lessons
+
+The homepage displays subject cards from distinct `nama_pelajaran` values in the `materi` table. Because the schema import contains no material rows, the subject list is empty until an administrator adds the first lesson.
+
+1. Open `/dashboard_admin.php` and choose **+ Tambah Materi**.
+2. Fill in the subject name, title, material content, and optionally teacher/image fields.
+3. Save the material. Repeat for every subject that should appear on the homepage.
+4. Use the subject names exactly as the existing homepage mapping expects:
+
+   - `Bahasa Indonesia`
+   - `Bahasa Inggris`
+   - `DK RPL`
+   - `Seni Rupa`
+   - `Coding & AI`
+   - `Sejarah`
+   - `PJOK`
+   - `BK`
+   - `Pendidikan Agama`
+   - `PPKN`
+   - `Matematika`
+   - `IPAS`
+   - `Informatika`
+
+The repository does not contain an old production data backup or lesson seed records to restore. Do not import invented or third-party copyrighted lesson content as though it were the original school material. Add content you own or are authorized to publish.
