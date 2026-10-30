@@ -4,6 +4,9 @@ require_once __DIR__ . '/security.php';
 require_once __DIR__ . '/databasecpnel.php';
 
 $error_message = '';
+$success_message = isset($_GET['registered']) && $_GET['registered'] === '1'
+    ? 'Pendaftaran berhasil. Silakan masuk menggunakan email dan password yang baru dibuat.'
+    : '';
 $csrfToken = shadowsix_csrf_token();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -105,9 +108,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
           <button class="login-btn-main" type="submit">Login</button>
 
-          <?php if (isset($error_message)): ?>
-            <p style="color: var(--accent-3); text-align: center; font-weight: 700; margin-top: 15px;">
-              <?php echo htmlspecialchars($error_message); ?>
+          <?php if ($success_message !== ''): ?>
+            <p role="status" style="color: #15803d; text-align: center; font-weight: 700; margin-top: 15px;">
+              <?php echo htmlspecialchars($success_message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>
+            </p>
+          <?php endif; ?>
+
+          <?php if ($error_message !== ''): ?>
+            <p role="alert" style="color: var(--accent-3); text-align: center; font-weight: 700; margin-top: 15px;">
+              <?php echo htmlspecialchars($error_message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>
             </p>
           <?php endif; ?>
 
