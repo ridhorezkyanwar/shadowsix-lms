@@ -91,3 +91,25 @@ The artifact contains:
 If the raw repository has already been uploaded into `/htdocs`, download a backup first if there are any files you changed manually. Then remove the uploaded `.git` directory immediately because repository history should not be exposed from a public web root. Remove other development-only folders such as `.github`, `docker`, `scripts`, and `tests`, as well as root Docker and documentation files, before extracting the release ZIP directly into `/htdocs`. Do not remove application folders such as `img`, `kontak`, or the subject/material directories; these are included in the release ZIP.
 
 The site ZIP intentionally does not contain the active `config.local.php`. Create it on the hosting account by copying `config.local.php.example` to `config.local.php` and entering the private MySQL values from the InfinityFree control panel.
+
+
+## Troubleshooting: homepage opens but login/register do not work
+
+The anonymous homepage can load after establishing a database connection without querying the `login` table. Therefore, a working homepage alone does **not** prove that the application schema was imported. Both `login.php` and `register.php` need the `login` table.
+
+1. Open InfinityFree **MySQL Databases → phpMyAdmin** and select the exact database named in `config.local.php`.
+2. On the **Structure** tab, confirm that all three tables exist: `login`, `materi`, and `kontak`. If any are missing, import `shadowsix-schema.sql` from the release artifact into this selected database. Do not import it into a different database.
+3. Confirm `config.local.php` uses the full database name shown in the panel (including its account prefix), the exact MySQL hostname, exact username, and the current database password. The DB account used by the PHP website must have normal SELECT/INSERT/UPDATE/DELETE permissions on this database.
+4. For a new empty database, create a **new account using the Register page**. The schema-only SQL contains no user records, so credentials from an old hosting database do not exist here. There is no default admin account.
+5. Registration requires a valid email and a password of **at least 12 bytes** and no more than 72 bytes. Use a new test password of at least 12 characters using ordinary ASCII letters/numbers for the first test. If the email is already in this database, the page reports that it is already registered; use that account's existing password or another email.
+6. After successful registration, the app redirects to `login.php?registered=1`. Sign in using the same email and password just registered.
+
+### Interpret the message shown by the page
+
+- **“Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.”** Reload the form and submit again on the same HTTPS hostname. Make sure browser cookies are enabled; do not switch between `www` and non-`www` or between HTTP and HTTPS while submitting.
+- **“Isi nama dan email yang valid. Kata sandi harus 12–72 byte.”** Correct the registration fields, especially password length.
+- **“Pendaftaran tidak dapat diproses saat ini. Silakan coba lagi nanti.”** Check that the `login` table exists in the selected database and that the configured database user can insert into it. Check InfinityFree's PHP error log if the table and permissions are correct.
+- **“Login tidak dapat diproses saat ini. Silakan coba lagi nanti.”** Check that the `login` table exists and that the database user can SELECT from it. Make sure the account was registered in this same database.
+- **“Email atau Password salah.”** The account may not exist in this new database, or the email/password pair does not match. Register a fresh test account first if this is a new installation.
+
+Do not expose raw SQL errors, database passwords or PHP configuration in a public diagnostic page. If the page displays a different message, record the exact message (without any password or private data) before making further changes.
