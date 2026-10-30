@@ -74,3 +74,20 @@ If any test fails, inspect host error logs and the database values configured in
 This is a free shared-hosting deployment target for a school/portfolio project. Free hosting can impose resource, email, backup, and support limits. The current application is an educational project and has not had an independent security review; do not store sensitive student data or treat this as production-grade school infrastructure.
 
 The old hosting environment was removed, and no old database credentials or production records are available in this repository. A live site and database must be confirmed on the new hosting account after upload and the smoke tests above.
+
+
+## Important: do not upload the raw Git repository
+
+Do **not** use GitHub's ordinary **Code → Download ZIP** archive or upload a complete checked-out repository directly into `/htdocs`. That archive contains development-only content such as `.git`, `.github`, Docker files, scripts, tests, and internal documentation. It is not the shared-hosting release package.
+
+Use only the GitHub Actions artifact named `shadowsix-infinityfree-release` from the successful **Package InfinityFree deployment** workflow:
+[Open the workflow runs](https://github.com/ridhorezkyanwar/shadowsix-lms/actions/workflows/package-infinityfree.yml).
+
+The artifact contains:
+- `shadowsix-infinityfree-site.zip` — the selected PHP website files for `/htdocs`.
+- `shadowsix-schema.sql` — schema-only SQL to import through phpMyAdmin, kept outside the public web root.
+- `INFINITYFREE_DEPLOYMENT.md` — this guide.
+
+If the raw repository has already been uploaded into `/htdocs`, download a backup first if there are any files you changed manually. Then remove the uploaded `.git` directory immediately because repository history should not be exposed from a public web root. Remove other development-only folders such as `.github`, `docker`, `scripts`, and `tests`, as well as root Docker and documentation files, before extracting the release ZIP directly into `/htdocs`. Do not remove application folders such as `img`, `kontak`, or the subject/material directories; these are included in the release ZIP.
+
+The site ZIP intentionally does not contain the active `config.local.php`. Create it on the hosting account by copying `config.local.php.example` to `config.local.php` and entering the private MySQL values from the InfinityFree control panel.
