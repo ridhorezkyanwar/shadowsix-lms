@@ -1,4 +1,4 @@
-FROM php:8.3-apache-bookworm
+FROM php:8.5-apache-bookworm
 
 COPY docker/apache-security.conf /etc/apache2/conf-available/shadowsix-security.conf
 COPY docker/entrypoint.sh /usr/local/bin/shadowsix-entrypoint
