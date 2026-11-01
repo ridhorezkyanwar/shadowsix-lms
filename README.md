@@ -161,3 +161,26 @@ GitHub Actions checks PHP syntax, schema and application behavior, runs the Dock
 - **PHP.ID:** not used.
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for the current deployment summary and [INFINITYFREE_DEPLOYMENT.md](INFINITYFREE_DEPLOYMENT.md) for publishing and backup procedures.
+
+
+## CyberBiz AI website ownership proof
+
+CyberBiz AI can verify that the owner can publish a file on the exact ShadowSix hostname using this path:
+
+`/.well-known/cyberbiz-ai-verification.txt`
+
+This file is **not** part of the committed website source because its content is a one-time challenge token. To complete a challenge:
+
+1. In CyberBiz AI, create an assessment for `shadowsix.free.je` and choose **Verify website file**.
+2. Copy the generated token shown by CyberBiz AI.
+3. In InfinityFree File Manager, open the live document root (`/htdocs`) and create a directory named `.well-known` if it does not already exist.
+4. Create a file named exactly `cyberbiz-ai-verification.txt` inside `.well-known`.
+5. Paste the challenge token as the only line, with no quotes or extra explanatory text.
+6. Visit `https://shadowsix.free.je/.well-known/cyberbiz-ai-verification.txt` and confirm it returns plain text rather than a redirect or HTML error page.
+7. Return to CyberBiz AI and choose **Check website file** before the one-hour challenge expires.
+
+The repository includes a non-secret `cyberbiz-ai-verification.txt.example` placeholder to keep the directory in the release package. Do not rename that placeholder into the live proof without replacing its content with the current challenge token.
+
+**Never commit the real challenge token to GitHub.** Do not put it in README files, SQL exports, issue comments, or screenshots shared publicly. Delete the live file from the hosting account after verification if it is no longer needed.
+
+This proof demonstrates the ability to publish content at the ShadowSix website path. It is not a security audit and does not authorize scans of other domains or third-party services.
